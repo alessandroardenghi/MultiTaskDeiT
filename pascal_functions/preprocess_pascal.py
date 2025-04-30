@@ -10,6 +10,16 @@ source_annotations_dir = "VOCdevkit/VOC2012/Annotations"
 destination_images_dir = "data/images"
 output_labels_file = "data/labels.npz"
 
+
+VOC_CLASSES = [
+    'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 
+    'bus', 'car', 'cat', 'chair', 'cow', 
+    'diningtable', 'dog', 'horse', 'motorbike', 'person', 
+    'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor'
+]
+class_to_idx = {cls: i for i, cls in enumerate(VOC_CLASSES)}
+
+
 # Create destination directory if it doesn't exist
 os.makedirs(destination_images_dir, exist_ok=True)
 
@@ -19,25 +29,24 @@ labels_dict = {}
 # Get the list of image files
 image_files = [f for f in os.listdir(source_images_dir) if f.endswith(".jpg")]
 
-# Process images and annotations with a progress bar
-for image_file in tqdm(image_files, desc="Processing images"):
-    # Move image to destination
-    source_image_path = os.path.join(source_images_dir, image_file)
-    destination_image_path = os.path.join(destination_images_dir, image_file)
-    shutil.move(source_image_path, destination_image_path)
+labels_dict = {}
 
-    # Parse corresponding annotation file
+for image_file in tqdm(image_files, desc="Processing images"):
+    shutil.copy(
+        os.path.join(source_images_dir, image_file),
+        os.path.join(destination_images_dir, image_file)
+    )
     annotation_file = os.path.join(source_annotations_dir, image_file.replace(".jpg", ".xml"))
     if os.path.exists(annotation_file):
         tree = ET.parse(annotation_file)
         root = tree.getroot()
-
-        # Extract labels (object names)
         labels = [obj.find("name").text for obj in root.findall("object")]
-        labels_dict[destination_image_path] = labels
+        one_hot = np.zeros(len(VOC_CLASSES), dtype=np.float32)
+        for label in labels:
+            if label in class_to_idx:
+                one_hot[class_to_idx[label]] = 1.0
+        labels_dict[image_file] = one_hot
 
-# Save the labels dictionary as a .npz file
-os.makedirs("data", exist_ok=True)
-np.savez(output_labels_file, **labels_dict)
+np.savez(output_labels_file, labels=labels_dict, classes=VOC_CLASSES)
 
 print(f"Processed {len(labels_dict)} images and saved labels to {output_labels_file}.")
