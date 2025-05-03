@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 def jigsaw_image(image : np.array, 
                  n: int, 
                  jigsaw : bool = False, 
@@ -63,3 +63,13 @@ def jigsaw_image(image : np.array,
         transformed_image[i * patch_size:(i + 1) * patch_size, j * patch_size:(j + 1) * patch_size] = patch
 
     return [int(item) for sublist in transformation_vector for item in sublist], transformed_image
+
+
+def grayscale_weighted_3ch(x):
+    weights = torch.tensor([0.2989, 0.5870, 0.1140], device=x.device).view(1, 3, 1, 1)
+    gray = (x * weights).sum(dim=1, keepdim=True)  # (1, 1, H, W)
+    return gray.repeat(1, 3, 1, 1)  # (1, 3, H, W)
+
+def add_gaussian_noise(x, mean=0.0, std=0.1):
+    noise = torch.randn_like(x) * std + mean
+    return torch.clamp(x + noise, 0.0, 1.0)
