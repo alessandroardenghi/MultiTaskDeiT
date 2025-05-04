@@ -6,6 +6,8 @@ from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from .coloring_decoder import ColorizationDecoder
 from .jigsaw_head import JigsawHead
+from munch import Munch
+
 
 class MultiTaskDeiT(VisionTransformer):
     def __init__(self, do_jigsaw, do_coloring, do_classification, *args, **kwargs):
@@ -26,7 +28,7 @@ class MultiTaskDeiT(VisionTransformer):
         ## NEED TO WRITE THE FUNCTION TO JIGSAW
         x = add_gaussian_noise(x)
         x = grayscale_weighted_3ch(x)
-        x, pos_vector, rot_vector = jigsaw_batch(x, n_patches=self.num_patches)
+        x, self.pos_vector, self.rot_vector = jigsaw_batch(x, n_patches=self.num_patches)
         x = self.patch_embed(x)
 
         # append cls token
@@ -74,11 +76,38 @@ class MultiTaskDeiT(VisionTransformer):
         return x
 
     def forward(self, x):
-        
+        out = Munch(labels=(self.pos_vector, self.rot_vector))
+
         if self.do_classification:
             pred_cls = self.forward_cls(x)
+            out.pred_cls = pred_cls
         if self.do_jigsaw:
             pred_jigsaw, pos_vector, rot_vector = self.forward_jigsaw(x)
+            out.pred_jigsaw = pred_jigsaw
         if self.do_coloring:
             pred_coloring = self.forward_denoising_coloring(x)
-        return pred_cls, pred_jigsaw, pred_coloring
+            out.pred_coloring = pred_coloring
+        return out
+
+
+def main():
+    # Example usage
+    model = MultiTaskDeiT(
+        do_jigsaw=True,
+        do_coloring=True,
+        do_classification=True,
+        img_size=224,
+        patch_size=16,
+        in_chans=3,
+        num_classes=86,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
+        mlp_ratio=4.0,
+        qkv_bias=True,
+        norm_layer=None
+    )
+    print(model)
+
+if __name__ == "__main__":
+    main()

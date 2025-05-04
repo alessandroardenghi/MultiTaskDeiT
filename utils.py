@@ -1,5 +1,8 @@
 import numpy as np
 import torch
+import random
+
+
 def jigsaw_image(image : np.array, 
                  n: int, 
                  jigsaw : bool = False, 
@@ -74,9 +77,6 @@ def add_gaussian_noise(x, mean=0.0, std=0.1):
     noise = torch.randn_like(x) * std + mean
     return torch.clamp(x + noise, 0.0, 1.0)
 
-import torch
-import random
-
 def jigsaw_single_image(image: torch.Tensor, n_patches: int = 14):
     """
     image: torch.Tensor of shape [C, H, W]
@@ -145,3 +145,100 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
         rot_vectors[i] = rot
 
     return transformed_images, pos_vectors, rot_vectors
+
+
+### TRAINING UTILS ###
+
+
+def hamming_loss(y_true, y_pred):
+    """
+    Compute the Hamming loss for multi-label classification. Measures the fraction 
+    of correctly predicted labels to the total number of labels.
+
+    Parameters:
+    - y_true (Tensor): Ground truth labels of shape [batch_size, num_labels].
+    - y_pred (Tensor): Predicted probabilities (after sigmoid) of shape [batch_size, num_labels].
+    - threshold (float): The threshold to convert probabilities to binary predictions (default 0.5).
+
+    Returns:
+    - hamming_loss (float): The Hamming loss for the batch.
+    """
+
+    assert y_true.shape == y_pred.shape, "Shapes of y_true and y_pred must match"
+    
+    correct = np.sum(y_true == y_pred)
+    total = np.prod(y_true.shape)
+    
+    return correct / total
+
+    # if isinstance(y_true, torch.Tensor):
+    #     correct = (y_true == y_pred).float().sum()
+    #     total = torch.numel(y_true)
+    #     return (correct / total).item()
+
+    # else:  # assume numpy
+    #     correct = (y_true == y_pred).sum()
+    #     total = y_true.size
+    #     return correct / total
+
+
+def save_model(model, path=None):
+    """
+    Save the model to a specified path.
+    Parameters:
+    - model (nn.Module): The model to be saved.
+    - path (str): Path to save the model.
+    Returns:
+    - None
+    """
+    
+    name = model.__class__.__name__
+    if path is None:
+        path = f"{name}.pth"
+    else:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = path + f"/{name}.pth"
+
+    torch.save(model.state_dict(), path)
+    print(f"Model saved to {path}")
+
+def load_model(model_arch, model_name, path=None):
+    """
+    Load the model from a specified path.
+    Parameters:
+    - model_arch (nn.Module): The architecture of the model.
+    - model (str): The model to be loaded.
+    - path (str): Path to load the model from.
+    Returns:
+    - model (nn.Module): The loaded model.
+    """
+    
+    if path is None:
+        path = f"{model_name}.pth"
+    else:
+        path = path + f"/{model_name}.pth"
+    
+    model.load_state_dict(torch.load(path, weight_only=True))
+    print(f"Model loaded from {path}")
+    return model
+
+
+class AverageMeter:
+    """Computes and stores the average and current value"""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0  # The current value
+        self.avg = 0  # The running average
+        self.sum = 0  # The total sum of values
+        self.count = 0  # The number of values processed
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n  # Sum of values
+        self.count += n  # Count of samples processed
+        self.avg = self.sum / self.count  # Running average
+

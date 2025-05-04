@@ -10,46 +10,6 @@ import numpy as np
 from dataset_functions.classification import ClassificationDataset
 
 
-
-class AverageMeter:
-    """Computes and stores the average and current value"""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0  # The current value
-        self.avg = 0  # The running average
-        self.sum = 0  # The total sum of values
-        self.count = 0  # The number of values processed
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n  # Sum of values
-        self.count += n  # Count of samples processed
-        self.avg = self.sum / self.count  # Running average
-
-def hamming_loss(y_true, y_pred):
-    """
-    Compute the Hamming loss for multi-label classification.
-
-    Parameters:
-    - y_true (Tensor): Ground truth labels of shape [batch_size, num_labels].
-    - y_pred (Tensor): Predicted probabilities (after sigmoid) of shape [batch_size, num_labels].
-    - threshold (float): The threshold to convert probabilities to binary predictions (default 0.5).
-
-    Returns:
-    - hamming_loss (float): The Hamming loss for the batch.
-    """
-
-    # Calculate the number of incorrect labels
-    incorrect_labels = (y_pred != y_true).float()
-
-    # Calculate Hamming loss (average over all labels and samples)
-    hamming_loss_value = incorrect_labels.sum() / (y_true.numel())
-
-    return hamming_loss_value
-
 def train_one_epoch(
     model, 
     loader, 
@@ -160,49 +120,7 @@ def train_model(
     
     save_model(model, path=path)
 
-    
 
-def save_model(model, path=None):
-    """
-    Save the model to a specified path.
-    Parameters:
-    - model (nn.Module): The model to be saved.
-    - path (str): Path to save the model.
-    Returns:
-    - None
-    """
-    
-    name = model.__class__.__name__
-    if path is None:
-        path = f"{name}.pth"
-    else:
-        if not os.path.exists(path):
-            os.makedirs(path)
-        path = path + f"/{name}.pth"
-
-    torch.save(model.state_dict(), path)
-    print(f"Model saved to {path}")
-
-def load_model(model_arch, model_name, path=None):
-    """
-    Load the model from a specified path.
-    Parameters:
-    - model_arch (nn.Module): The architecture of the model.
-    - model (str): The model to be loaded.
-    - path (str): Path to load the model from.
-    Returns:
-    - model (nn.Module): The loaded model.
-    """
-    
-    if path is None:
-        path = f"{model_name}.pth"
-    else:
-        path = path + f"/{model_name}.pth"
-    
-    model.load_state_dict(torch.load(path, weight_only=True))
-    print(f"Model loaded from {path}")
-    return model
-    
 
 def main():
 

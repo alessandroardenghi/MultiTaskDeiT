@@ -18,7 +18,7 @@ conda activate llm_testing
 
 
 # Run your script
-time python build_train_test.py
+time python models/full_model.py > outputprints
 
 # Deactivate conda
 conda deactivate
