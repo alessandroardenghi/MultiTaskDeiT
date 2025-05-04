@@ -9,8 +9,7 @@ class JigsawHead(nn.Module):
             nn.ReLU(),
             nn.Linear(embed_dim, embed_dim),
             nn.ReLU(),
-            nn.Linear(embed_dim, num_patches * 2),  # Output dimension: num_patches * 2
-            nn.Sigmoid() 
+            nn.Linear(embed_dim, num_patches + 4),  # Output dimension: num_patches * 2
         )
     
     def forward(self, x):

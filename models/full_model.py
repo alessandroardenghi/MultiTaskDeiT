@@ -10,7 +10,7 @@ from munch import Munch
 
 
 class MultiTaskDeiT(VisionTransformer):
-    def __init__(self, do_jigsaw, do_coloring, do_classification, *args, **kwargs):
+    def __init__(self, n_classes, do_jigsaw, do_coloring, do_classification, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.num_patches = self.patch_embed.num_patches
@@ -23,12 +23,15 @@ class MultiTaskDeiT(VisionTransformer):
         
         if self.do_coloring:
             self.coloring_decoder = ColorizationDecoder(embed_dim=self.embed_dim)
+            
+        if self.do_classification and n_classes != 1000:
+            self.head = torch.nn.Linear(self.head.in_features, n_classes)  
 
     def forward_jigsaw(self, x):
         ## NEED TO WRITE THE FUNCTION TO JIGSAW
         x = add_gaussian_noise(x)
         x = grayscale_weighted_3ch(x)
-        x, self.pos_vector, self.rot_vector = jigsaw_batch(x, n_patches=self.num_patches)
+        x, pos_vector, rot_vector = jigsaw_batch(x, n_patches=int(self.num_patches**0.5))
         x = self.patch_embed(x)
 
         # append cls token
@@ -40,7 +43,7 @@ class MultiTaskDeiT(VisionTransformer):
         # apply Transformer blocks
         x = self.blocks(x)
         x = self.norm(x)
-        x = self.jigsaw(x[:, 1:])       # TO BE DEFINED
+        x = self.jigsaw_head(x[:, 1:])       # TO BE DEFINED
         return x, pos_vector, rot_vector
 
     def forward_cls(self, x): 
@@ -76,7 +79,7 @@ class MultiTaskDeiT(VisionTransformer):
         return x
 
     def forward(self, x):
-        out = Munch(labels=(self.pos_vector, self.rot_vector))
+        out = Munch()
 
         if self.do_classification:
             pred_cls = self.forward_cls(x)
@@ -84,6 +87,8 @@ class MultiTaskDeiT(VisionTransformer):
         if self.do_jigsaw:
             pred_jigsaw, pos_vector, rot_vector = self.forward_jigsaw(x)
             out.pred_jigsaw = pred_jigsaw
+            out.pos_vector = pos_vector
+            out.rot_vector = rot_vector
         if self.do_coloring:
             pred_coloring = self.forward_denoising_coloring(x)
             out.pred_coloring = pred_coloring
@@ -109,5 +114,5 @@ def main():
     )
     print(model)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
