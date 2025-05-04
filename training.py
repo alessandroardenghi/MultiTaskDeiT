@@ -4,6 +4,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
 from tqdm import tqdm
+import timm
+import os
+import numpy as np
+from dataset_functions.classification import ClassificationDataset
+
+
 
 class AverageMeter:
     """Computes and stores the average and current value"""
@@ -44,7 +50,15 @@ def hamming_loss(y_true, y_pred):
 
     return hamming_loss_value
 
-def train_one_epoch(model, loader, criterion, optimizer, accuracy_fun, device):
+def train_one_epoch(
+    model, 
+    loader, 
+    criterion, 
+    optimizer, 
+    accuracy_fun, 
+    device):
+
+
     model.train()
     threshold = 0.5
     loss_m = AverageMeter()  # For tracking the loss
@@ -72,7 +86,13 @@ def train_one_epoch(model, loader, criterion, optimizer, accuracy_fun, device):
     epoch_acc = acc_m.avg
     return epoch_loss, epoch_acc
 
-def validate(model, loader, criterion, accuracy_fun, device):
+def validate(
+    model, 
+    loader, 
+    criterion, 
+    accuracy_fun, 
+    device):
+
     model.eval()
     threshold = 0.5
     loss_m = AverageMeter()  # For tracking the loss
@@ -100,10 +120,22 @@ def train_model(
     optimizer, 
     accuracy_fun, 
     num_epochs,
-    lr=1e-3, 
+    path=None,
     device=None):
-
-    lr = lr
+    """
+    Train the model for a specified number of epochs.
+    Parameters:
+    - model (nn.Module): The model to be trained.
+    - train_dataloader (DataLoader): DataLoader for the training dataset.
+    - val_dataloader (DataLoader): DataLoader for the validation dataset.
+    - criterion (nn.Module): Loss function.
+    - optimizer (torch.optim.Optimizer): Optimizer for the model.
+    - accuracy_fun (function): Function to compute accuracy.
+    - num_epochs (int): Number of epochs to train the model.
+    - device (torch.device, optional): Device to run the model on. If None, will use GPU if available.
+    Returns:
+    - None
+    """
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -125,4 +157,92 @@ def train_model(
 
         print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
         print(f"Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.4f}")
+    
+    save_model(model, path=path)
 
+    
+
+def save_model(model, path=None):
+    """
+    Save the model to a specified path.
+    Parameters:
+    - model (nn.Module): The model to be saved.
+    - path (str): Path to save the model.
+    Returns:
+    - None
+    """
+    
+    name = model.__class__.__name__
+    if path is None:
+        path = f"{name}.pth"
+    else:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = path + f"/{name}.pth"
+
+    torch.save(model.state_dict(), path)
+    print(f"Model saved to {path}")
+
+def load_model(model_arch, model_name, path=None):
+    """
+    Load the model from a specified path.
+    Parameters:
+    - model_arch (nn.Module): The architecture of the model.
+    - model (str): The model to be loaded.
+    - path (str): Path to load the model from.
+    Returns:
+    - model (nn.Module): The loaded model.
+    """
+    
+    if path is None:
+        path = f"{model_name}.pth"
+    else:
+        path = path + f"/{model_name}.pth"
+    
+    model.load_state_dict(torch.load(path, weight_only=True))
+    print(f"Model loaded from {path}")
+    return model
+    
+
+def main():
+
+    transform = transforms.Compose(
+    [
+        transforms.Resize([224,224]),
+        transforms.ToTensor(),
+    ]
+    )
+
+    train_dataset = ClassificationDataset('data', split='train', transform=transform)
+    val_dataset = ClassificationDataset('data', split='val', transform=transform)
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=True)
+    
+    name = 'deit_tiny_patch16_224.fb_in1k'
+    model = timm.create_model(name, pretrained=True)
+    num_features = model.head.in_features  
+    custom_head = torch.nn.Sequential(
+        torch.nn.Linear(num_features, 512),  
+        torch.nn.ReLU(),
+        torch.nn.Linear(512, 20)  
+    )
+    model.head = custom_head
+    for name, param in model.named_parameters():
+        if 'head' not in name:  
+            param.requires_grad = False
+
+    criterion = nn.BCE()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    train_model(model=model,
+                train_dataloader=train_loader,
+                val_dataloader=val_loader,
+                criterion=criterion,
+                optimizer=optimizer,
+                accuracy_fun=hamming_loss,
+                num_epochs=5,
+                path='./benchmark_models',)
+
+
+if __name__ == "__main__":
+    main()
