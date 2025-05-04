@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 import random
-from much import Munch
+from munch import Munch
+import os
+import torch.nn as nn
 
 def jigsaw_image(image : np.array, 
                  n: int, 

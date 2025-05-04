@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
+from collections.abc import Iterable, Callable
+from typing import List
 from torchvision import datasets, transforms
 from tqdm import tqdm
 import timm
@@ -13,17 +15,17 @@ from utils import AverageMeter, JigsawAccuracy
 
 
 def train_one_epoch(
-    model: torch.nn.Module,
-    data_loader: Iterable, 
+    model: nn.Module,
+    data_loader: Iterable,
     criterion: Munch,
-    optimizer: torch.optim.Optimizer,
-    device: torch.device, 
+    optimizer: optim.Optimizer,
+    device: torch.device,
     epoch: int,
-    active_heads: list, # control which heads are active
-    combine_losses: callable, # function to combine the losses (it is a partial function)
-    accuracy_fun: callable, # function to calculate classification accuracy
-    threshold: float = 0.5, # threshold for classification
-    ):
+    active_heads: List[str],
+    combine_losses: Callable,
+    accuracy_fun: Callable,
+    threshold: float = 0.5,
+):
     """
     Train the model for one epoch.
     Args:
@@ -52,6 +54,7 @@ def train_one_epoch(
     assert all(head in criterion.keys() for head in active_heads)
 
     model.train()
+    model = model.to(device)
 
     loss_m = AverageMeter()  # For tracking the overall loss
     loss_m_classification = AverageMeter()  # For tracking the classification loss
@@ -70,15 +73,16 @@ def train_one_epoch(
         outputs = model(images)
         losses = torch.zeros(3).to(device)
         if 'classification' in active_heads:
-            class_loss = criterion.classification(outputs.classification, labels)
+            class_loss = criterion.classification(outputs.pred_cls, labels)
             loss_m_classification.update(class_loss.item(), images.shape[0])
-            losses[0] = classification_loss
+            losses[0] = class_loss
         if 'coloring' in active_heads:
-            coloring_loss = criterion.coloring(outputs.coloring, images)
+            coloring_loss = criterion.coloring(outputs.pred_coloring, images)
             loss_m_coloring.update(coloring_loss.item(), images.shape[0])
             losses[1] = coloring_loss
         if 'jigsaw' in active_heads:
-            jigsaw_loss = criterion.jigsaw(outputs.jigsaw, labels)
+            jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196].to(device), outputs.pos_vector) + \
+                            0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:].to(device), outputs.rot_vector)
             loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
             losses[2] = jigsaw_loss
 
@@ -146,6 +150,7 @@ def validate(
     assert all(head in criterion.keys() for head in active_heads)
 
     model.eval()
+    model = model.to(device)
     
     loss_m = AverageMeter()  # For tracking the overall loss
     loss_m_classification = AverageMeter()  # For tracking the classification loss
@@ -164,15 +169,16 @@ def validate(
             outputs = model(images)
             losses = torch.zeros(3).to(device)
             if 'classification' in active_heads:
-                class_loss = criterion.classification(outputs.classification, labels)
+                class_loss = criterion.classification(outputs.pred_cls, labels)
                 loss_m_classification.update(class_loss.item(), images.shape[0])
-                losses[0] = classification_loss
+                losses[0] = class_loss
             if 'coloring' in active_heads:
-                coloring_loss = criterion.coloring(outputs.coloring, images)
+                coloring_loss = criterion.coloring(outputs.pred_coloring, images)
                 loss_m_coloring.update(coloring_loss.item(), images.shape[0])
                 losses[1] = coloring_loss
             if 'jigsaw' in active_heads:
-                jigsaw_loss = criterion.jigsaw(outputs.jigsaw, labels)
+                jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector) + \
+                                0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
                 loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
                 losses[2] = jigsaw_loss
 

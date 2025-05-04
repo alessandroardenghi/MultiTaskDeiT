@@ -22,6 +22,7 @@ def main():
         do_jigsaw=True,
         do_coloring=True,
         do_classification=True,
+        n_classes=20,
         img_size=224,
         patch_size=16,
         in_chans=3,
@@ -35,8 +36,17 @@ def main():
     )
     print(model)
 
-    train_dataloader = 0
-    val_dataloader = 0
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+    train_dataset = ClassificationDataset('data', split='train', transform=transform)
+    val_dataset = ClassificationDataset('data', split='val', transform=transform)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=8, shuffle=False)
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
@@ -48,7 +58,7 @@ def main():
     save_path = None
 
     train_model(
-        model=model
+        model=model,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         criterion=criterion,
