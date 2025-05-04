@@ -153,7 +153,7 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
 ### TRAINING UTILS ###
 
 
-def hamming_loss(y_true, y_pred):
+def hamming_acc(y_true, y_pred):
     """
     Compute the Hamming loss for multi-label classification. Measures the fraction 
     of correctly predicted labels to the total number of labels.
