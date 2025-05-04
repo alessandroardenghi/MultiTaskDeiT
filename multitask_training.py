@@ -8,16 +8,21 @@ import timm
 import os
 import numpy as np
 from dataset_functions.classification import ClassificationDataset
+from munch import Munch
+from utils import AverageMeter, JigsawAccuracy
 
 
 def train_one_epoch(
     model: torch.nn.Module,
     data_loader: Iterable, 
-    criterion: dict, 
+    criterion: Munch,
     optimizer: torch.optim.Optimizer,
     device: torch.device, 
     epoch: int,
-    active_heads: list # control which heads are active
+    active_heads: list, # control which heads are active
+    combine_losses: callable, # function to combine the losses (it is a partial function)
+    accuracy_fun: callable, # function to calculate classification accuracy
+    threshold: float = 0.5, # threshold for classification
     ):
     """
     Train the model for one epoch.
@@ -32,14 +37,21 @@ def train_one_epoch(
         device (torch.device): The device to use for training.
         epoch (int): The current epoch number.
         active_heads (Optional[list]): List of active heads to train. If None, all heads are trained.
+        combine_losses (callable): Function to combine the losses from different heads.
+        threshold (float): Threshold for classification accuracy.
     Returns:
         epoch_loss (float): The average loss for the epoch.
-        epoch_acc (float): The average accuracy for the epoch.
+        epoch_classification_loss (float): The average classification loss for the epoch.
+        epoch_coloring_loss (float): The average coloring loss for the epoch.
+        epoch_jigsaw_loss (float): The average jigsaw loss for the epoch.
+        epoch_class_accurary (float): The average classification accuracy for the epoch.
+        epoch_jigsaw_pos_accuracy (float): The average jigsaw position accuracy for the epoch.
+        epoch_jigsaw_rot_accuracy (float): The average jigsaw rotation accuracy for the epoch.
     """
 
-    model.train()
-
     assert all(head in criterion.keys() for head in active_heads)
+
+    model.train()
 
     loss_m = AverageMeter()  # For tracking the overall loss
     loss_m_classification = AverageMeter()  # For tracking the classification loss
@@ -47,18 +59,230 @@ def train_one_epoch(
     loss_m_jigsaw = AverageMeter()  # For tracking the jigsaw loss
 
     acc_m_classification = AverageMeter() # For tracking the classification accuracy
-    acc_m_jigsaw = AverageMeter() # For tracking the jigsaw accuracy
+    acc_m_pos = JigsawAccuracy(n=5) # For tracking the jigsaw accuracy in predicting positions
+    acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
 
     for batch_index, (images, labels) in enumerate(tqdm(data_loader, desc="Training", leave=False)):
 
         images, labels = images.to(device), labels.to(device).float()
 
+        # Forward and losses calculation
+        outputs = model(images)
+        losses = torch.zeros(3).to(device)
+        if 'classification' in active_heads:
+            class_loss = criterion.classification(outputs.classification, labels)
+            loss_m_classification.update(class_loss.item(), images.shape[0])
+            losses[0] = classification_loss
+        if 'coloring' in active_heads:
+            coloring_loss = criterion.coloring(outputs.coloring, images)
+            loss_m_coloring.update(coloring_loss.item(), images.shape[0])
+            losses[1] = coloring_loss
+        if 'jigsaw' in active_heads:
+            jigsaw_loss = criterion.jigsaw(outputs.jigsaw, labels)
+            loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
+            losses[2] = jigsaw_loss
+
+        # Combine losses
+        loss = combine_losses(losses, active_heads) ##TODO: write combine_losses function
+        loss_m.update(loss.item(), images.shape[0])
+
+        # Backward
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
         
+        # Metrics
+        if 'classification' in active_heads:
+            class_outputs = (torch.sigmoid(outputs.classification) > threshold).int()
+            acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])  
+        if 'jigsaw' in active_heads:
+            acc_m_pos.update(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector)
+            acc_m_rot.update(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
+    
+    epoch_loss = loss_m.avg
+    epoch_classification_loss = loss_m_classification.avg
+    epoch_coloring_loss = loss_m_coloring.avg
+    epoch_jigsaw_loss = loss_m_jigsaw.avg
+    epoch_class_accurary = acc_m_classification.avg
+    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
+    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
+
+    return Much(
+            train_epoch_loss=epoch_loss,
+            train_epoch_classification_loss=epoch_classification_loss,
+            train_epoch_coloring_loss=epoch_coloring_loss,
+            train_epoch_jigsaw_loss=epoch_jigsaw_loss,
+            train_epoch_class_accurary=epoch_class_accurary,
+            train_epoch_jigsaw_pos_accuracy=epoch_jigsaw_pos_accuracy,
+            train_epoch_jigsaw_rot_accuracy=epoch_jigsaw_rot_accuracy
+        )
 
 
+def validate(
+    model: torch.nn.Module,
+    data_loader: Iterable, 
+    criterion: Munch,
+    device: torch.device, 
+    active_heads: list, # control which heads are active
+    accuracy_fun: callable, # function to calculate classification accuracy
+    threshold: float = 0.5, # threshold for classification
+    ):
+    """
+    Validate the model on the validation set.
+    Args:
+        model (torch.nn.Module): The model to validate.
+        data_loader (Iterable): The data loader for the validation data.
+        criterion (dict): The loss functions for each head: {'head_name': loss_function}.
+                            1. 'classification': nn.BCEWithLogitsLoss, LabelSmoothingCrossEntropy
+                            2. 'coloring': nn.MSELoss
+                            3. 'jigsaw': nn.MSELoss if using a regression head otherise nn.CrossEntropyLoss 
+        device (torch.device): The device to use for validation.
+        active_heads (Optional[list]): List of active heads to validate. If None, all heads are validated.
+        accuracy_fun (callable): Function to calculate classification accuracy.
+        threshold (float): Threshold for classification accuracy.
+    Returns:
+    """
+
+    assert all(head in criterion.keys() for head in active_heads)
+
+    model.eval()
+    
+    loss_m = AverageMeter()  # For tracking the overall loss
+    loss_m_classification = AverageMeter()  # For tracking the classification loss
+    loss_m_coloring = AverageMeter()  # For tracking the coloring loss
+    loss_m_jigsaw = AverageMeter()  # For tracking the jigsaw loss
+
+    acc_m_classification = AverageMeter() # For tracking the classification accuracy
+    acc_m_pos = JigsawAccuracy(n=5) # For tracking the jigsaw accuracy in predicting positions
+    acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
+
+    with torch.no_grad():
+        for batch_idx, (images, labels) in enumerate(tqdm(data_loader, desc="Validation", leave=False)):
+            images, labels = images.to(device), labels.to(device).float()
+
+            # Forward and losses calculation
+            outputs = model(images)
+            losses = torch.zeros(3).to(device)
+            if 'classification' in active_heads:
+                class_loss = criterion.classification(outputs.classification, labels)
+                loss_m_classification.update(class_loss.item(), images.shape[0])
+                losses[0] = classification_loss
+            if 'coloring' in active_heads:
+                coloring_loss = criterion.coloring(outputs.coloring, images)
+                loss_m_coloring.update(coloring_loss.item(), images.shape[0])
+                losses[1] = coloring_loss
+            if 'jigsaw' in active_heads:
+                jigsaw_loss = criterion.jigsaw(outputs.jigsaw, labels)
+                loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
+                losses[2] = jigsaw_loss
+
+            # Combine losses
+            loss = combine_losses(losses, active_heads)
+            loss_m.update(loss.item(), images.shape[0])
+
+            # Metrics
+            if 'classification' in active_heads:
+                class_outputs = (torch.sigmoid(outputs.classification) > threshold).int()
+                acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])
+            if 'jigsaw' in active_heads:
+                acc_m_pos.update(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector)
+                acc_m_rot.update(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
+    
+    epoch_loss = loss_m.avg
+    epoch_classification_loss = loss_m_classification.avg
+    epoch_coloring_loss = loss_m_coloring.avg
+    epoch_jigsaw_loss = loss_m_jigsaw.avg
+    epoch_class_accurary = acc_m_classification.avg
+    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
+    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
+
+    return Much(
+            val_epoch_loss=epoch_loss,
+            val_epoch_classification_loss=epoch_classification_loss,
+            val_epoch_coloring_loss=epoch_coloring_loss,
+            val_epoch_jigsaw_loss=epoch_jigsaw_loss,
+            val_epoch_class_accurary=epoch_class_accurary,
+            val_epoch_jigsaw_pos_accuracy=epoch_jigsaw_pos_accuracy,
+            val_epoch_jigsaw_rot_accuracy=epoch_jigsaw_rot_accuracy
+        )
 
 
+def train_model(
+    model: torch.nn.Module,
+    train_dataloader: Iterable,
+    val_dataloader: Iterable,
+    criterion: Munch,
+    optimizer: torch.optim.Optimizer,
+    #device: torch.device,
+    num_epochs: int,
+    active_heads: list, # control which heads are active
+    combine_losses: callable, # function to combine the losses (it is a partial function)
+    accuracy_fun: callable, # function to calculate classification accuracy
+    threshold: float = 0.5, # threshold for classification
+    save_path: str = None, # path to save the model
+    ):
+    """
+    Train the model for a specified number of epochs.
+    Args:
+        model (torch.nn.Module): The model to train.
+        train_dataloader (Iterable): DataLoader for the training dataset.
+        val_dataloader (Iterable): DataLoader for the validation dataset.
+        criterion (dict): The loss functions for each head: {'head_name': loss_function}.
+                            1. 'classification': nn.BCEWithLogitsLoss, LabelSmoothingCrossEntropy
+                            2. 'coloring': nn.MSELoss
+                            3. 'jigsaw': nn.MSELoss if using a regression head otherise nn.CrossEntropyLoss 
+        optimizer (torch.optim.Optimizer): Optimizer for the model.
+        device (torch.device): The device to use for training.
+        num_epochs (int): Number of epochs to train the model.
+        active_heads (Optional[list]): List of active heads to train. If None, all heads are trained.
+        combine_losses (callable): Function to combine the losses from different heads.
+        accuracy_fun (callable): Function to calculate classification accuracy.
+        threshold (float): Threshold for classification accuracy.
+        save_path (str): Path to save the model. If None, the model will not be saved.
+    Returns:
+        None
+    """
 
-def validate():
-    pass
+    if save_path is not None:
+        os.makedirs(save_path, exist_ok=True)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    print(f"Start training")
+    for epoch in range(num_epochs):
+
+        print(f"\nEpoch {epoch+1}/{num_epochs}")
+        train_metrics = train_one_epoch(
+            model=model,
+            data_loader=train_dataloader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
+            epoch=epoch,
+            active_heads=active_heads,
+            combine_losses=combine_losses,
+            accuracy_fun=accuracy_fun,
+            threshold=threshold
+        )
+        val_metrics = validate(
+            model=model,
+            data_loader=val_dataloader,
+            criterion=criterion,
+            device=device,
+            active_heads=active_heads,
+            accuracy_fun=accuracy_fun,
+            threshold=threshold
+        )
+
+        # Print metrics
+        print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
+        print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
+        print('='*50)
+        print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
+        print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}")
+        print('\n='*50)
+
+    print(f"Training completed")
+
+
+    if save_path is not None:
+        save_model(model, path=save_path)

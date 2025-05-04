@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import random
-
+from much import Munch
 
 def jigsaw_image(image : np.array, 
                  n: int, 
@@ -244,4 +244,54 @@ class AverageMeter:
         self.sum += val * n  # Sum of values
         self.count += n  # Count of samples processed
         self.avg = self.sum / self.count  # Running average
+
+class JigsawAccuracy:
+    def __init__(self, n = 3):
+        #self.num_classes = num_classes
+        self.n = n
+        self.reset()
+
+    def reset(self):
+        self.total_patches = 0
+        self.correct = 0
+        self.top_n = 0
+
+    def update(self, pred, gt):
+        """
+        Args:
+            pred: (B, P, C_pos) torch.Tensor
+            rotation_logits: (B, P, C_rot) torch.Tensor
+            true_positions: (B, P) torch.Tensor
+            true_rotations: (B, P) torch.Tensor
+        """
+        B, P, _ = pred.shape
+        total = B * P
+        self.total_patches += total
+
+        # Top-1 predictions
+        pos_top1 = pred.argmax(dim=-1)
+        self.correct += (pos_top1 == gt).sum().item()
+
+        # Top-n accuracy
+        if self.n > 1:
+            sorted = pred.argsort(dim=-1, descending=True)
+            topn_pred = sorted[:, :, :self.n]
+            match = (topn_pred == gt.unsqueeze(-1)).any(dim=-1)
+            self.top_n += match.sum()
+
+
+    def get_scores(self):
+        total = self.total_patches
+        acc = self.correct / total
+        top_n = self.top_n / total
+
+        if self.n > 1:
+            return {
+                'accuracy': acc,
+                'topn_accuracy': top_n,
+            }
+        return {
+            'accuracy': acc,
+        }
+
 
