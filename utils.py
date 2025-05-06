@@ -134,7 +134,7 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
         rot_vectors: torch.Tensor [B, N]
     """
     B, C, H, W = images.shape
-    print(images.shape)
+    #print(images.shape)
     N = n_patches * n_patches
 
     transformed_images = torch.empty_like(images)
@@ -146,8 +146,8 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
         transformed_images[i] = transformed
         pos_vectors[i] = pos
         rot_vectors[i] = rot
-    print(pos_vectors.shape)
-    print(rot_vectors.shape)
+    # print(pos_vectors.shape)
+    # print(rot_vectors.shape)
 
     return transformed_images, pos_vectors, rot_vectors
 
