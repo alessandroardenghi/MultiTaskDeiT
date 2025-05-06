@@ -155,7 +155,7 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
 ### TRAINING UTILS ###
 
 
-def hamming_acc(y_true, y_pred):
+def hamming_acc(y_pred, y_true):
     """
     Compute the Hamming loss for multi-label classification. Measures the fraction 
     of correctly predicted labels to the total number of labels.
@@ -171,8 +171,11 @@ def hamming_acc(y_true, y_pred):
 
     assert y_true.shape == y_pred.shape, "Shapes of y_true and y_pred must match"
     
-    correct = np.sum(y_true == y_pred)
-    total = np.prod(y_true.shape)
+    #correct = (y_true == y_pred).sum().item()
+    correct = y_true == y_pred
+    correct = correct.sum()
+    correct = correct.item()
+    total =  y_true.numel()
     
     return correct / total
 

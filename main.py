@@ -45,8 +45,8 @@ def main():
     train_dataset = ClassificationDataset('data', split='train', transform=transform)
     val_dataset = ClassificationDataset('data', split='val', transform=transform)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=8, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False)
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
