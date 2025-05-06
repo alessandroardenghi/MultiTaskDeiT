@@ -144,7 +144,8 @@ def validate(
     device: torch.device, 
     active_heads: list, # control which heads are active
     accuracy_fun: callable, # function to calculate classification accuracy
-    threshold: float = 0.5, # threshold for classification
+    combine_losses: callable,
+    threshold: float = 0.5, # threshold for classification,
     ):
     """
     Validate the model on the validation set.
@@ -296,6 +297,7 @@ def train_model(
             device=device,
             active_heads=active_heads,
             accuracy_fun=accuracy_fun,
+            combine_losses=combine_losses,
             threshold=threshold
         )
 
