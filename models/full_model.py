@@ -1,11 +1,14 @@
 from dataclasses import dataclass
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # Add the main directory to the path
 import os
 import numpy as np
 import torch
 from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch
 from timm.models.vision_transformer import VisionTransformer, _cfg
-from .coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
-from .jigsaw_head import JigsawHead
+from coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
+from jigsaw_head import JigsawHead
 from munch import Munch
 from collections import defaultdict
 
