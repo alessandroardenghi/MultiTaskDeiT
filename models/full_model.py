@@ -4,13 +4,14 @@ import numpy as np
 import torch
 from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch
 from timm.models.vision_transformer import VisionTransformer, _cfg
-from .coloring_decoder import ColorizationDecoder
+from .coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
 from .jigsaw_head import JigsawHead
 from munch import Munch
+from collections import defaultdict
 
 
 class MultiTaskDeiT(VisionTransformer):
-    def __init__(self, n_classes, do_jigsaw, do_coloring, do_classification, *args, **kwargs):
+    def __init__(self, n_classes, do_jigsaw, do_coloring, do_classification, pixel_shuffle=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.num_patches = self.patch_embed.num_patches
@@ -21,8 +22,10 @@ class MultiTaskDeiT(VisionTransformer):
         if self.do_jigsaw:
             self.jigsaw_head = JigsawHead(embed_dim=self.embed_dim, num_patches=self.num_patches)
         
-        if self.do_coloring:
+        if self.do_coloring and not pixel_shuffle:
             self.coloring_decoder = ColorizationDecoder(embed_dim=self.embed_dim)
+        if self.do_coloring and pixel_shuffle:
+            self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, upscale_factor=16, out_channels=3)
             
         if self.do_classification and n_classes != 1000:
             self.head = torch.nn.Linear(self.head.in_features, n_classes)  
@@ -93,6 +96,26 @@ class MultiTaskDeiT(VisionTransformer):
             pred_coloring = self.forward_denoising_coloring(x)
             out.pred_coloring = pred_coloring
         return out
+    
+
+    def count_params_by_block(self):
+        block_param_counts = defaultdict(int)
+        total_trainable = 0
+        total_params = 0
+
+        for name, param in self.named_parameters():
+            total_params += param.numel()
+            if param.requires_grad:
+                top_block = name.split('.')[0]
+                block_param_counts[top_block] += param.numel()
+                total_trainable += param.numel()
+
+        print("Trainable parameter counts by block:\n")
+        for block, count in block_param_counts.items():
+            print(f"{block:<20}: {count:,} parameters")
+
+        print(f"\nTotal trainable parameters: {total_trainable:,}")
+        print(f"Total parameters (including frozen): {total_params:,}")
 
 
 def main():
