@@ -3,7 +3,7 @@ data
 err
 out
 *.sh
-
+temp.ipynb
 
 __pycache__/
 *.pyc
