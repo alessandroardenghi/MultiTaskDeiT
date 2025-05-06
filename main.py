@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
+import models.model_registry
 import timm
 import os
 import numpy as np
@@ -13,27 +14,19 @@ from models.full_model import MultiTaskDeiT
 from utils import load_model
 from multitask_training import train_model
 from utils import hamming_acc
+from timm import create_model
 
 def main():
 
     active_heads = ['classification', 'coloring', 'jigsaw'] 
 
-    model = MultiTaskDeiT(
-        do_jigsaw=True,
-        do_coloring=True,
-        do_classification=True,
-        n_classes=20,
-        img_size=224,
-        patch_size=16,
-        in_chans=3,
-        num_classes=86,
-        embed_dim=768,
-        depth=12,
-        num_heads=12,
-        mlp_ratio=4.0,
-        qkv_bias=True,
-        norm_layer=None
-    )
+    model = create_model('MultiTaskDeiT_tiny', 
+                         do_jigsaw= True, 
+                         do_classification = True, 
+                         do_coloring= True, 
+                         pixel_shuffle=True,
+                         verbose=False,
+                         pretrained=False)
     #print(model)
 
     transform = transforms.Compose([

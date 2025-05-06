@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+import sys
 import os
 import numpy as np
 import torch
-from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch
+from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch, reconstruct_image
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from .coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
 from .jigsaw_head import JigsawHead
@@ -83,10 +84,54 @@ class MultiTaskDeiT(VisionTransformer):
         x = x[:, 1:]  # remove cls token
         x = self.coloring_decoder(x)
         return x
+    
+    def forward_jigsaw_inference(self, x):
+        
+        x = self.patch_embed(x)
 
-    def forward(self, x):
-        out = Munch()
+        # append cls token
+        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+        cls_pos_embed = self.pos_embed[:, :1, :]
+        cls_tokens = cls_tokens + cls_pos_embed
+        x = torch.cat((cls_tokens, x), dim=1)
+
+        # apply Transformer blocks
+        x = self.blocks(x)
+        x = self.norm(x)
+        x = self.jigsaw_head(x[:, 1:])
+        
+        # x is the vector of predictions per jigsaw patch
+        return x
+    
+    def forward_coloring_inference(self, x):
+        
+        x = self.patch_embed(x)
+        x = x + self.pos_embed[:, 1:, :]
+
+        # append cls token
+        cls_token = self.cls_token + self.pos_embed[:, :1, :]
+        cls_tokens = cls_token.expand(x.shape[0], -1, -1)
+        x = torch.cat((cls_tokens, x), dim=1)
+
+        x = self.blocks(x)
+        x = self.norm(x)
+        x = x[:, 1:]  
+        x = self.coloring_decoder(x)
+        return x
+        
+    def forward_inference(self, x):
+        positions = self.forward_jigsaw_inference(x)
+        x = reconstruct_image(x, positions)            # TO BE DEFINED
+        x = self.forward_coloring_inference(x)
+        return x
+        
+
+    def forward(self, x, mode='standard'):
         self.device = next(self.parameters()).device
+        if mode == 'reconstruction':
+            return self.forward_inference(x)
+            
+        out = Munch()
         if self.do_classification:
             pred_cls = self.forward_cls(x)
             out.pred_cls = pred_cls
@@ -99,6 +144,7 @@ class MultiTaskDeiT(VisionTransformer):
             pred_coloring = self.forward_denoising_coloring(x)
             out.pred_coloring = pred_coloring
         return out
+            
     
 
     def count_params_by_block(self):
@@ -121,24 +167,6 @@ class MultiTaskDeiT(VisionTransformer):
         print(f"Total parameters (including frozen): {total_params:,}")
 
 
-def main():
-    # Example usage
-    model = MultiTaskDeiT(
-        do_jigsaw=True,
-        do_coloring=True,
-        do_classification=True,
-        img_size=224,
-        patch_size=16,
-        in_chans=3,
-        num_classes=86,
-        embed_dim=768,
-        depth=12,
-        num_heads=12,
-        mlp_ratio=4.0,
-        qkv_bias=True,
-        norm_layer=None
-    )
-    print(model)
 
 # if __name__ == "__main__":
 #     main()

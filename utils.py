@@ -300,3 +300,5 @@ class JigsawAccuracy:
         }
 
 
+def reconstruct_image(image, pos_rot_vector):
+    return image
