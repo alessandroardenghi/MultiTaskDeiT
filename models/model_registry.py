@@ -6,9 +6,7 @@ from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.models import load_pretrained
 from timm.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models import register_model
-import sys
-sys.path.append('../models')
-from full_model import MultiTaskDeiT
+from .full_model import MultiTaskDeiT
 import math
 from dataclasses import dataclass
 
