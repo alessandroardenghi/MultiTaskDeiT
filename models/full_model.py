@@ -18,7 +18,7 @@ class MultiTaskDeiT(VisionTransformer):
         self.do_jigsaw = do_jigsaw
         self.do_coloring = do_coloring
         self.do_classification = do_classification
-
+        
         if self.do_jigsaw:
             self.jigsaw_head = JigsawHead(embed_dim=self.embed_dim, num_patches=self.num_patches)
         
@@ -28,7 +28,7 @@ class MultiTaskDeiT(VisionTransformer):
             self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, upscale_factor=16, out_channels=3)
             
         if self.do_classification and n_classes != 1000:
-            self.head = torch.nn.Linear(self.head.in_features, n_classes)  
+            self.class_head = torch.nn.Linear(self.head.in_features, n_classes)  
 
     def forward_jigsaw(self, x):
         ## NEED TO WRITE THE FUNCTION TO JIGSAW
@@ -46,7 +46,10 @@ class MultiTaskDeiT(VisionTransformer):
         # apply Transformer blocks
         x = self.blocks(x)
         x = self.norm(x)
-        x = self.jigsaw_head(x[:, 1:])       # TO BE DEFINED
+        x = self.jigsaw_head(x[:, 1:])
+        print(self.device)
+        pos_vector = pos_vector.to(self.device)
+        rot_vector = rot_vector.to(self.device)
         return x, pos_vector, rot_vector
 
     def forward_cls(self, x): 
@@ -60,7 +63,7 @@ class MultiTaskDeiT(VisionTransformer):
 
         x = self.blocks(x)
         x = self.norm(x)
-        x = self.head(x[:, 0])
+        x = self.class_head(x[:, 0])
         return x
     
     def forward_denoising_coloring(self, x): 
@@ -83,7 +86,7 @@ class MultiTaskDeiT(VisionTransformer):
 
     def forward(self, x):
         out = Munch()
-
+        self.device = next(self.parameters()).device
         if self.do_classification:
             pred_cls = self.forward_cls(x)
             out.pred_cls = pred_cls

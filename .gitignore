@@ -2,7 +2,7 @@ VOCdevkit
 data
 err
 out
-
+*.sh
 
 
 __pycache__/

@@ -14,11 +14,11 @@
 # Activate conda
 module load modules/miniconda3
 eval "$(conda shell.bash hook)"
-conda activate llm_testing
+conda activate vit-env
 
 
 # Run your script
-time python models/full_model.py > outputprints
+time python main_training.py
 
 # Deactivate conda
 conda deactivate
