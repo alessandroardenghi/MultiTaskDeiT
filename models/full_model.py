@@ -48,7 +48,7 @@ class MultiTaskDeiT(VisionTransformer):
         x = self.blocks(x)
         x = self.norm(x)
         x = self.jigsaw_head(x[:, 1:])
-        print(self.device)
+        #print(self.device)
         pos_vector = pos_vector.to(self.device)
         rot_vector = rot_vector.to(self.device)
         return x, pos_vector, rot_vector

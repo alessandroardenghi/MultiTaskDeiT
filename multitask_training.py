@@ -66,27 +66,18 @@ def train_one_epoch(
     acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
 
     for batch_index, (images, labels) in enumerate(tqdm(data_loader, desc="Training", leave=False)):
-        print(f'IMAGE DEVICE: {images.device}')
-        print(f'LABELS DEVICE: {labels.device}')
-        #print(f'MODEL DEVICE: {model.device}')
+        
         images, labels = images.to(device), labels.to(device).float()
 
-        print(f'IMAGE DEVICE AFTER MOVE: {images.device}')
-        print(f'LABELS DEVICE AFTER MOVE: {labels.device}')
-        
         # Forward and losses calculation
         outputs = model(images)
-        #print(f'OUTPUTS DEVICE: {outputs.device}')
-        print(f'OUTPUTS PRED CLSDEVICE: {outputs.pred_cls.device}')
-        print(f'OUTPUTS PRED COLORING DEVICE: {outputs.pred_coloring.device}')
-        print(f'OUTPUTS PRED JIGSAW: {outputs.pred_jigsaw.device}')
-        print(f'OUTPUTS POS VEC JIGSAW: {outputs.pos_vector.device}')
-        print(f'OUTPUTS ROT VEC JIGSAW: {outputs.rot_vector.device}')
-        
+        # print(f'OUTPUTS PRED CLSDEVICE: {outputs.pred_cls.device}')
+        # print(f'OUTPUTS PRED COLORING DEVICE: {outputs.pred_coloring.device}')
+        # print(f'OUTPUTS PRED JIGSAW: {outputs.pred_jigsaw.device}')
+        # print(f'OUTPUTS POS VEC JIGSAW: {outputs.pos_vector.device}')
+        # print(f'OUTPUTS ROT VEC JIGSAW: {outputs.rot_vector.device}')
         
         losses = torch.zeros(3).to(device)
-        
-        
         if 'classification' in active_heads:
             class_loss = criterion.classification(outputs.pred_cls, labels)
             loss_m_classification.update(class_loss.item(), images.shape[0])
@@ -96,8 +87,14 @@ def train_one_epoch(
             loss_m_coloring.update(coloring_loss.item(), images.shape[0])
             losses[1] = coloring_loss
         if 'jigsaw' in active_heads:
-            jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector) + \
-                            0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
+            B,P,C = outputs.pred_jigsaw.shape
+            H = W = int(P**0.5)
+            pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
+            pos_vector = outputs.pos_vector.view(B,H,W)
+            rot_vector = outputs.rot_vector.view(B,H,W)
+              
+            jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:196,:,:], pos_vector) + \
+                            0.5 * criterion.jigsaw(pred_jigsaw2d[:,196:,:,:], rot_vector)
             loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
             losses[2] = jigsaw_loss
 
@@ -112,7 +109,7 @@ def train_one_epoch(
         
         # Metrics
         if 'classification' in active_heads:
-            class_outputs = (torch.sigmoid(outputs.classification) > threshold).int()
+            class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
             acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])  
         if 'jigsaw' in active_heads:
             acc_m_pos.update(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector)
@@ -183,11 +180,7 @@ def validate(
 
             # Forward and losses calculation
             outputs = model(images)
-            
-            # outputs.pos_vector = outputs.pos_vector.to(device)
-            # outputs.rot_vector = outputs.rot_vector.to(device)
-            
-            
+
             losses = torch.zeros(3).to(device)
             if 'classification' in active_heads:
                 class_loss = criterion.classification(outputs.pred_cls, labels)
@@ -198,8 +191,14 @@ def validate(
                 loss_m_coloring.update(coloring_loss.item(), images.shape[0])
                 losses[1] = coloring_loss
             if 'jigsaw' in active_heads:
-                jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector) + \
-                                0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
+                B,P,C = outputs.pred_jigsaw.shape
+                H = W = int(P**0.5)
+                pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
+                pos_vector = outputs.pos_vector.view(B,H,W)
+                rot_vector = outputs.rot_vector.view(B,H,W)
+                
+                jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:196,:,:], pos_vector) + \
+                                0.5 * criterion.jigsaw(pred_jigsaw2d[:,196:,:,:], rot_vector)
                 loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
                 losses[2] = jigsaw_loss
 
@@ -209,7 +208,7 @@ def validate(
 
             # Metrics
             if 'classification' in active_heads:
-                class_outputs = (torch.sigmoid(outputs.classification) > threshold).int()
+                class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
                 acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])
             if 'jigsaw' in active_heads:
                 acc_m_pos.update(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector)
@@ -274,7 +273,8 @@ def train_model(
         os.makedirs(save_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
-    print(f"Start training")
+
+    print(f"\nStart training")
     for epoch in range(num_epochs):
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
@@ -307,7 +307,8 @@ def train_model(
         print('='*50)
         print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
         print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}")
-        print('\n='*50)
+        print('='*50)
+        print('\n')
 
     print(f"Training completed")
 
