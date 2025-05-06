@@ -18,21 +18,20 @@ from timm import create_model
 
 def main():
 
-    active_heads = ['classification', 'coloring', 'jigsaw'] 
+    active_heads = ['jigsaw'] 
 
     model = create_model('MultiTaskDeiT_tiny', 
-                         do_jigsaw= True, 
-                         do_classification = True, 
-                         do_coloring= True, 
-                         pixel_shuffle=True,
+                         do_jigsaw=True, 
+                         do_classification=False, 
+                         do_coloring=False, 
+                         pixel_shuffle=False,
                          verbose=False,
-                         pretrained=False)
-    #print(model)
+                         pretrained=True) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     train_dataset = ClassificationDataset('data', split='train', transform=transform)
@@ -45,7 +44,7 @@ def main():
         jigsaw=nn.CrossEntropyLoss(),
         coloring=nn.MSELoss()
     )
-    num_epochs = 1
+    num_epochs = 5
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
     save_path = None
