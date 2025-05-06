@@ -25,6 +25,7 @@ def main():
                          do_classification = True, 
                          do_coloring= True, 
                          pixel_shuffle=True,
+                         verbose=False,
                          pretrained=False)
     #print(model)
 
@@ -48,20 +49,20 @@ def main():
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
     save_path = None
-    print(model)
-    # train_model(
-    #     model=model,
-    #     train_dataloader=train_dataloader,
-    #     val_dataloader=val_dataloader,
-    #     criterion=criterion,
-    #     optimizer=optimizer,
-    #     num_epochs=num_epochs,
-    #     active_heads=active_heads,
-    #     combine_losses=combine_losses,
-    #     accuracy_fun=hamming_acc,
-    #     threshold=0.5,
-    #     save_path=None,
-    # )
+
+    train_model(
+        model=model,
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        criterion=criterion,
+        optimizer=optimizer,
+        num_epochs=num_epochs,
+        active_heads=active_heads,
+        combine_losses=combine_losses,
+        accuracy_fun=hamming_acc,
+        threshold=0.5,
+        save_path=None,
+    )
 
 
 
