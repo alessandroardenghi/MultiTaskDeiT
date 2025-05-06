@@ -8,3 +8,5 @@
 - Write reconstruction function
 - Add argparse
 - add method 'reconstruction' or 'sequential'to switch modes
+- modify model to do only one encoder pass
+- change jigsaw patch size
