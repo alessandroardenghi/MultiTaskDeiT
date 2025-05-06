@@ -11,7 +11,7 @@ import os
 import numpy as np
 from dataset_functions.classification import ClassificationDataset
 from munch import Munch
-from utils import AverageMeter, JigsawAccuracy
+from utils import AverageMeter, JigsawAccuracy, save_model
 
 
 def train_one_epoch(
@@ -66,12 +66,27 @@ def train_one_epoch(
     acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
 
     for batch_index, (images, labels) in enumerate(tqdm(data_loader, desc="Training", leave=False)):
-
+        print(f'IMAGE DEVICE: {images.device}')
+        print(f'LABELS DEVICE: {labels.device}')
+        #print(f'MODEL DEVICE: {model.device}')
         images, labels = images.to(device), labels.to(device).float()
 
+        print(f'IMAGE DEVICE AFTER MOVE: {images.device}')
+        print(f'LABELS DEVICE AFTER MOVE: {labels.device}')
+        
         # Forward and losses calculation
         outputs = model(images)
+        #print(f'OUTPUTS DEVICE: {outputs.device}')
+        print(f'OUTPUTS PRED CLSDEVICE: {outputs.pred_cls.device}')
+        print(f'OUTPUTS PRED COLORING DEVICE: {outputs.pred_coloring.device}')
+        print(f'OUTPUTS PRED JIGSAW: {outputs.pred_jigsaw.device}')
+        print(f'OUTPUTS POS VEC JIGSAW: {outputs.pos_vector.device}')
+        print(f'OUTPUTS ROT VEC JIGSAW: {outputs.rot_vector.device}')
+        
+        
         losses = torch.zeros(3).to(device)
+        
+        
         if 'classification' in active_heads:
             class_loss = criterion.classification(outputs.pred_cls, labels)
             loss_m_classification.update(class_loss.item(), images.shape[0])
@@ -81,8 +96,8 @@ def train_one_epoch(
             loss_m_coloring.update(coloring_loss.item(), images.shape[0])
             losses[1] = coloring_loss
         if 'jigsaw' in active_heads:
-            jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196].to(device), outputs.pos_vector) + \
-                            0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:].to(device), outputs.rot_vector)
+            jigsaw_loss = 0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector) + \
+                            0.5 * criterion.jigsaw(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
             loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
             losses[2] = jigsaw_loss
 
@@ -111,7 +126,7 @@ def train_one_epoch(
     epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
     epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
 
-    return Much(
+    return Munch(
             train_epoch_loss=epoch_loss,
             train_epoch_classification_loss=epoch_classification_loss,
             train_epoch_coloring_loss=epoch_coloring_loss,
@@ -167,6 +182,11 @@ def validate(
 
             # Forward and losses calculation
             outputs = model(images)
+            
+            # outputs.pos_vector = outputs.pos_vector.to(device)
+            # outputs.rot_vector = outputs.rot_vector.to(device)
+            
+            
             losses = torch.zeros(3).to(device)
             if 'classification' in active_heads:
                 class_loss = criterion.classification(outputs.pred_cls, labels)
@@ -202,7 +222,7 @@ def validate(
     epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
     epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
 
-    return Much(
+    return Munch(
             val_epoch_loss=epoch_loss,
             val_epoch_classification_loss=epoch_classification_loss,
             val_epoch_coloring_loss=epoch_coloring_loss,

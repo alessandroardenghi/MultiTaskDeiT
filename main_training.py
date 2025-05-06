@@ -34,7 +34,7 @@ def main():
         qkv_bias=True,
         norm_layer=None
     )
-    print(model)
+    #print(model)
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
