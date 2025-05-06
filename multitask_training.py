@@ -54,7 +54,7 @@ def train_one_epoch(
     assert all(head in criterion.keys() for head in active_heads)
 
     model.train()
-    model = model.to(device)
+    #model = model.to(device)
 
     loss_m = AverageMeter()  # For tracking the overall loss
     loss_m_classification = AverageMeter()  # For tracking the classification loss
@@ -166,7 +166,7 @@ def validate(
     assert all(head in criterion.keys() for head in active_heads)
 
     model.eval()
-    model = model.to(device)
+    #model = model.to(device)
     
     loss_m = AverageMeter()  # For tracking the overall loss
     loss_m_classification = AverageMeter()  # For tracking the classification loss
@@ -273,7 +273,7 @@ def train_model(
     if save_path is not None:
         os.makedirs(save_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    model = model.to(device)
     print(f"Start training")
     for epoch in range(num_epochs):
 

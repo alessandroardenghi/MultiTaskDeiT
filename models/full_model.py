@@ -17,7 +17,6 @@ class MultiTaskDeiT(VisionTransformer):
         self.do_jigsaw = do_jigsaw
         self.do_coloring = do_coloring
         self.do_classification = do_classification
-        self.device = next(self.parameters()).device
         
         if self.do_jigsaw:
             self.jigsaw_head = JigsawHead(embed_dim=self.embed_dim, num_patches=self.num_patches)
@@ -45,6 +44,7 @@ class MultiTaskDeiT(VisionTransformer):
         x = self.blocks(x)
         x = self.norm(x)
         x = self.jigsaw_head(x[:, 1:])
+        print(self.device)
         pos_vector = pos_vector.to(self.device)
         rot_vector = rot_vector.to(self.device)
         return x, pos_vector, rot_vector
@@ -83,7 +83,7 @@ class MultiTaskDeiT(VisionTransformer):
 
     def forward(self, x):
         out = Munch()
-
+        self.device = next(self.parameters()).device
         if self.do_classification:
             pred_cls = self.forward_cls(x)
             out.pred_cls = pred_cls
