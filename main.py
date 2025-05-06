@@ -18,13 +18,13 @@ from timm import create_model
 
 def main():
 
-    active_heads = ['jigsaw'] 
+    active_heads = ['classification', 'coloring', 'jigsaw'] 
 
     model = create_model('MultiTaskDeiT_tiny', 
                          do_jigsaw=True, 
-                         do_classification=False, 
-                         do_coloring=False, 
-                         pixel_shuffle=False,
+                         do_classification=True, 
+                         do_coloring=True, 
+                         pixel_shuffle=True,
                          verbose=False,
                          pretrained=True) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
 
@@ -49,6 +49,8 @@ def main():
     combine_losses = lambda x,y: x.sum()
     save_path = None
 
+    print(f"Training with active heads: {' '.join(active_heads)}")
+    print(model.count_params_by_block(self))
     train_model(
         model=model,
         train_dataloader=train_dataloader,
