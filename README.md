@@ -14,3 +14,4 @@
 - freeze encoder or heads weights
 - modify model to do only one encoder pass
 - change jigsaw patch size
+- parallelize training
