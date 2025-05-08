@@ -40,6 +40,7 @@ def train_one_epoch(
         epoch (int): The current epoch number.
         active_heads (Optional[list]): List of active heads to train. If None, all heads are trained.
         combine_losses (callable): Function to combine the losses from different heads.
+        accuracy_fun (callable): Function to calculate classification accuracy.
         threshold (float): Threshold for classification accuracy.
     Returns:
         epoch_loss (float): The average loss for the epoch.
@@ -120,8 +121,12 @@ def train_one_epoch(
     epoch_coloring_loss = loss_m_coloring.avg
     epoch_jigsaw_loss = loss_m_jigsaw.avg
     epoch_class_accurary = acc_m_classification.avg
-    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
-    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
+    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()['accuracy']
+    try:
+        epoch_jigsaw_pos_topnaccuracy = acc_m_pos.get_scores()['topn_accuracy']
+    except:
+        epoch_jigsaw_pos_topnaccuracy = 0
+    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()['accuracy']
 
     return Munch(
             train_epoch_loss=epoch_loss,
@@ -130,6 +135,7 @@ def train_one_epoch(
             train_epoch_jigsaw_loss=epoch_jigsaw_loss,
             train_epoch_class_accurary=epoch_class_accurary,
             train_epoch_jigsaw_pos_accuracy=epoch_jigsaw_pos_accuracy,
+            train_epoch_jigsaw_pos_topnaccuracy=epoch_jigsaw_pos_topnaccuracy,
             train_epoch_jigsaw_rot_accuracy=epoch_jigsaw_rot_accuracy
         )
 
@@ -156,6 +162,7 @@ def validate(
         device (torch.device): The device to use for validation.
         active_heads (Optional[list]): List of active heads to validate. If None, all heads are validated.
         accuracy_fun (callable): Function to calculate classification accuracy.
+        combine_losses (callable): Function to combine the losses from different heads.
         threshold (float): Threshold for classification accuracy.
     Returns:
     """
@@ -219,9 +226,13 @@ def validate(
     epoch_coloring_loss = loss_m_coloring.avg
     epoch_jigsaw_loss = loss_m_jigsaw.avg
     epoch_class_accurary = acc_m_classification.avg
-    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()
-    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()
-
+    epoch_jigsaw_pos_accuracy = acc_m_pos.get_scores()['accuracy']
+    try:
+        epoch_jigsaw_pos_topnaccuracy = acc_m_pos.get_scores()['topn_accuracy']
+    except:
+        epoch_jigsaw_pos_topnaccuracy = 0
+    epoch_jigsaw_rot_accuracy = acc_m_rot.get_scores()['accuracy']
+    
     return Munch(
             val_epoch_loss=epoch_loss,
             val_epoch_classification_loss=epoch_classification_loss,
@@ -229,6 +240,7 @@ def validate(
             val_epoch_jigsaw_loss=epoch_jigsaw_loss,
             val_epoch_class_accurary=epoch_class_accurary,
             val_epoch_jigsaw_pos_accuracy=epoch_jigsaw_pos_accuracy,
+            val_epoch_jigsaw_pos_topnaccuracy=epoch_jigsaw_pos_topnaccuracy,
             val_epoch_jigsaw_rot_accuracy=epoch_jigsaw_rot_accuracy
         )
 
@@ -302,13 +314,24 @@ def train_model(
         )
 
         # Print metrics
-        print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
-        print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
+        print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | \
+            Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | \
+            Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | \
+            Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
+        print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | \
+            Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | \
+            Train Jigsaw Pos TopN Acc: {train_metrics.train_epoch_jigsaw_pos_topnaccuracy:.4f} | \
+            Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
         print('='*50)
-        print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
-        print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}")
-        print('='*50)
-        print('\n')
+        print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | \
+            Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | \
+            Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | \
+            Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
+        print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | \
+            Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | \
+            Val Jigsaw Pos TopN Acc: {val_metrics.val_epoch_jigsaw_pos_topnaccuracy:.4f} | \
+            Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}\n")
+        print('='*170)
 
     print(f"Training completed")
 

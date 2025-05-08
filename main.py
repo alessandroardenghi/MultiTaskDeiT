@@ -18,11 +18,12 @@ from timm import create_model
 
 def main():
 
-    active_heads = ['classification', 'coloring', 'jigsaw'] 
+    #active_heads = ['classification', 'coloring', 'jigsaw'] 
+    active_heads = ['coloring']
 
     model = create_model('MultiTaskDeiT_tiny', 
-                         do_jigsaw=True, 
-                         do_classification=True, 
+                         do_jigsaw=False, 
+                         do_classification=False, 
                          do_coloring=True, 
                          pixel_shuffle=True,
                          verbose=False,
@@ -47,10 +48,10 @@ def main():
     num_epochs = 5
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
-    save_path = None
+    save_path = 'temp_checkpoints/coloring'
 
     print(f"Training with active heads: {' '.join(active_heads)}")
-    print(model.count_params_by_block(self))
+    print(model.count_params_by_block())
     train_model(
         model=model,
         train_dataloader=train_dataloader,
@@ -62,7 +63,7 @@ def main():
         combine_losses=combine_losses,
         accuracy_fun=hamming_acc,
         threshold=0.5,
-        save_path=None,
+        save_path=save_path,
     )
 
 

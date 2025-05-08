@@ -251,7 +251,7 @@ class AverageMeter:
         self.avg = self.sum / self.count  # Running average
 
 class JigsawAccuracy:
-    def __init__(self, n = 3):
+    def __init__(self, n = 1):
         #self.num_classes = num_classes
         self.n = n
         self.reset()
@@ -287,8 +287,12 @@ class JigsawAccuracy:
 
     def get_scores(self):
         total = self.total_patches
-        acc = self.correct / total
-        top_n = self.top_n / total
+        try: 
+            acc = self.correct / total
+            top_n = self.top_n / total
+        except:
+            acc = 0
+            top_n = 0
 
         if self.n > 1:
             return {
