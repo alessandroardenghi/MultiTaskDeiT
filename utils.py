@@ -190,7 +190,7 @@ def hamming_acc(y_pred, y_true):
     #     return correct / total
 
 
-def save_model(model, path=None):
+def save_model(model, path=None, name = None):
     """
     Save the model to a specified path.
     Parameters:
@@ -199,8 +199,9 @@ def save_model(model, path=None):
     Returns:
     - None
     """
+    if name is None:
+        name = model.__class__.__name__
     
-    name = model.__class__.__name__
     if path is None:
         path = f"{name}.pth"
     else:
@@ -306,3 +307,22 @@ class JigsawAccuracy:
 
 def reconstruct_image(image, pos_rot_vector):
     return image
+
+def freeze_blocks_by_name(model, block_names):
+    """
+    Freezes parameters in the model based on block names.
+    This is useful for transfer learning or fine-tuning specific parts of a model.
+
+    Args:
+        model (torch.nn.Module): The model.
+        block_names (List[str]): List of blocks to freeze.
+    """
+
+    for name, module in model.named_modules():
+        print('name:',name)
+        print('module:',module)
+        if any(block_name in name for block_name in block_names):
+            for param in module.parameters():
+                print('param',param)
+                #param.requires_grad = False
+            print(f"Froze: {name}")

@@ -14,7 +14,7 @@ class ColorizationDecoder(nn.Module):
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),          # 112 → 224
             nn.ReLU(),
             nn.Conv2d(32, 3, kernel_size=1),                           # 224x224x3 output
-            nn.Sigmoid() 
+            #nn.Sigmoid() 
         )
 
     def forward(self, x):
@@ -58,5 +58,5 @@ class ColorizationDecoderPixelShuffle(nn.Module):
         x = self.proj(x)              # (B, out_channels*r^2, H, W)
         x = self.pixel_shuffle(x)      # (B, out_channels, H*r, W*r)
         x = self.smooth(x)             # optional smoothing
-        x = self.activation(x)         # normalize to [0,1]
+        # x = self.activation(x)         # normalize to [0,1]
         return x

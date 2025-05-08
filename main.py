@@ -25,7 +25,7 @@ def main():
                          do_jigsaw=False, 
                          do_classification=False, 
                          do_coloring=True, 
-                         pixel_shuffle=True,
+                         pixel_shuffle=False,
                          verbose=False,
                          pretrained=True) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
 
@@ -45,10 +45,25 @@ def main():
         jigsaw=nn.CrossEntropyLoss(),
         coloring=nn.MSELoss()
     )
-    num_epochs = 5
+    num_epochs = 10
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
     save_path = 'temp_checkpoints/coloring'
+    
+
+    ###### testtttttt #######
+    for name, module in model.named_modules():
+        print('name:',name)
+        print('module:',module)
+        if any(block_name in name for block_name in block_names):
+            for param in module.parameters():
+                print('param',param)
+                #param.requires_grad = False
+            print(f"Froze: {name}")
+
+    return
+    ###### testtttttt #######
+
 
     print(f"Training with active heads: {' '.join(active_heads)}")
     print(model.count_params_by_block())
