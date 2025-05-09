@@ -191,43 +191,47 @@ def validate(
 
     with torch.no_grad():
         for batch_idx, (images, labels) in enumerate(tqdm(data_loader, desc="Validation", leave=False)):
-            images, labels = images.to(device), labels.to(device).float()
+            
+            images = move_to_device(images, device)
+            labels = move_to_device(labels, device)
 
             # Forward and losses calculation
             outputs = model(images)
 
             losses = torch.zeros(3).to(device)
             if 'classification' in active_heads:
-                class_loss = criterion.classification(outputs.pred_cls, labels)
-                loss_m_classification.update(class_loss.item(), images.shape[0])
+                class_loss = criterion.classification(outputs.pred_cls, labels.label_classification)
+                loss_m_classification.update(class_loss.item(), images.image_classification.shape[0])
                 losses[0] = class_loss
+            
             if 'coloring' in active_heads:
-                coloring_loss = criterion.coloring(outputs.pred_coloring, images)
-                loss_m_coloring.update(coloring_loss.item(), images.shape[0])
+                coloring_loss = criterion.coloring(outputs.pred_coloring, labels.ab_channels)
+                loss_m_coloring.update(coloring_loss.item(), images.image_colorization.shape[0])
                 losses[1] = coloring_loss
+            
             if 'jigsaw' in active_heads:
                 B,P,C = outputs.pred_jigsaw.shape
                 H = W = int(P**0.5)
                 pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
-                pos_vector = outputs.pos_vector.view(B,H,W)
-                rot_vector = outputs.rot_vector.view(B,H,W)
+                pos_vector = labels.pos_vector.view(B,H,W)
+                rot_vector = labels.rot_vector.view(B,H,W)
                 
-                jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:196,:,:], pos_vector) + \
-                                0.5 * criterion.jigsaw(pred_jigsaw2d[:,196:,:,:], rot_vector)
-                loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
+                jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
+                                0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
+                loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
                 losses[2] = jigsaw_loss
 
             # Combine losses
             loss = combine_losses(losses, active_heads)
-            loss_m.update(loss.item(), images.shape[0])
+            loss_m.update(loss.item(), images.image_classification.shape[0])
 
             # Metrics
             if 'classification' in active_heads:
                 class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
                 acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])
             if 'jigsaw' in active_heads:
-                acc_m_pos.update(outputs.pred_jigsaw[:,:,:196], outputs.pos_vector)
-                acc_m_rot.update(outputs.pred_jigsaw[:,:,196:], outputs.rot_vector)
+                acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], pos_vector)
+                acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], rot_vector)
     
     epoch_loss = loss_m.avg
     epoch_classification_loss = loss_m_classification.avg
