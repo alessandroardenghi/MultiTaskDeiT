@@ -8,21 +8,31 @@ from utils import jigsaw_single_image
 from munch import Munch
 
 def preprocess_for_coloring(pil_img):
-    # Convert to LAB and split channels
-    lab = pil_img.convert('LAB')
-    lab_np = np.array(lab).astype(np.float32)
+    """
+    Converts a PIL RGB image to normalized L and ab tensors using OpenCV's CIELAB conversion.
 
-    L = lab_np[:, :, 0] / 255.0  # Normalize L to [0,1]
-    ab = lab_np[:, :, 1:] - 128  # Center a/b to [-128, 127] → now [-128, 127]
+    Returns:
+        L_3ch_tensor: torch.FloatTensor [3, H, W] - L channel repeated 3 times
+        ab_tensor: torch.FloatTensor [2, H, W] - normalized a/b channels in [-1, 1]
+    """
+    # Convert PIL image to RGB numpy array
+    rgb_np = np.array(pil_img.convert("RGB"))  # Shape: (H, W, 3), dtype=uint8
 
-    # Convert to tensors
-    L_tensor = torch.from_numpy(L).unsqueeze(0)  # [1, H, W]
-    ab_tensor = torch.from_numpy(ab.transpose(2, 0, 1)) / 128.0  # [2, H, W], normalized to [-1, 1]
+    # Convert RGB to LAB using OpenCV
+    lab = cv2.cvtColor(rgb_np, cv2.COLOR_RGB2LAB).astype(np.float32)  # LAB: L∈[0,100], a/b∈[-128,127]
 
-    # Repeat L for 3-channel input if needed
-    L_3ch_tensor = L_tensor.repeat(3, 1, 1)  # [3, H, W]
+    # Split channels
+    L = lab[:, :, 0] / 100.0                   # Normalize L to [0, 1]
+    ab = lab[:, :, 1:] / 127.0                 # Normalize ab to roughly [-1, 1]
 
-    return L_3ch_tensor, ab_tensor
+    # Convert to PyTorch tensors
+    L_tensor = torch.from_numpy(L).unsqueeze(0)               # Shape: [1, H, W]
+    ab_tensor = torch.from_numpy(ab.transpose(2, 0, 1))       # Shape: [2, H, W]
+
+    # Optional: repeat L channel 3x if needed as model input
+    L_3ch_tensor = L_tensor.repeat(3, 1, 1)                    # Shape: [3, H, W]
+
+    return L_3ch_tensor.float(), ab_tensor.float()
 
 
 class ClassificationDataset(Dataset):
