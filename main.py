@@ -45,23 +45,21 @@ def main():
         jigsaw=nn.CrossEntropyLoss(),
         coloring=nn.MSELoss()
     )
-    num_epochs = 10
+    num_epochs = 30
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
     save_path = 'temp_checkpoints/coloring'
     
 
     ###### testtttttt #######
-    for name, module in model.named_modules():
-        print('name:',name)
-        print('module:',module)
-        if any(block_name in name for block_name in block_names):
-            for param in module.parameters():
-                print('param',param)
-                #param.requires_grad = False
-            print(f"Froze: {name}")
+    def print_weighted_blocks(model):
+        for name, module in model.named_modules():
+            if any(p.requires_grad for p in module.parameters(recurse=False)):
+                print(name)
+    
+    #print(print_weighted_blocks(model))
 
-    return
+    #return
     ###### testtttttt #######
 
 

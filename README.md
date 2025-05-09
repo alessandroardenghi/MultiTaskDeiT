@@ -16,3 +16,4 @@
 - change jigsaw patch size
 - parallelize training
 - logger during training: mlflow.start_run
+- save some images for the coloring accuracy
