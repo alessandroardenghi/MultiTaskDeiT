@@ -16,19 +16,32 @@ from multitask_training import train_model
 from utils import hamming_acc, freeze_submodule
 from timm import create_model
 
+import yaml
+from munch import Munch
+
+def load_config(path):
+    with open(path, 'r') as f:
+        cfg = yaml.safe_load(f)
+    return Munch(cfg)  
+
+
+
 def main():
-
-    #active_heads = ['classification', 'coloring', 'jigsaw'] 
-    active_heads = ['coloring']
-    training_mode = 'fine-tune'
-
+    
+    cfg = load_config('config.yaml')        # cfg dict with all attributes inside
+    
+    active_heads = cfg.active_heads
+    do_coloring = 'coloring' in active_heads
+    do_classification = 'classification' in active_heads
+    do_jigsaw = 'jigsaw' in active_heads
+    
     model = create_model('MultiTaskDeiT_tiny', 
-                         do_jigsaw=False, 
-                         do_classification=False, 
-                         do_coloring=True, 
-                         pixel_shuffle=True,
-                         verbose=False,
-                         pretrained=True) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
+                         do_jigsaw = do_jigsaw, 
+                         do_classification = do_classification, 
+                         do_coloring = do_coloring, 
+                         pixel_shuffle = cfg.pixel_shuffle,
+                         verbose = cfg.verbose,
+                         pretrained = cfg.pretrained_backbone) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
 
     # transform = transforms.Compose([
     #     transforms.Resize((224, 224)),
@@ -39,21 +52,25 @@ def main():
     #train_dataset = ClassificationDataset('data', split='train', transform=transform)
     #val_dataset = ClassificationDataset('data', split='val', transform=transform)
 
-    train_dataset = MultiTaskDataset('data', split='train', img_size = 224, num_patches=14)
-    val_dataset = MultiTaskDataset('data', split='val', img_size = 224, num_patches=14)
+    train_dataset = MultiTaskDataset('data', split='train', img_size = cfg.img_size, num_patches=14)
+    val_dataset = MultiTaskDataset('data', split='val', img_size = cfg.img_size, num_patches=14)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, 
+                                  batch_size=cfg.batch_size, 
+                                  shuffle=True)
+    
+    val_dataloader = DataLoader(val_dataset, 
+                                batch_size=cfg.batch_size, 
+                                shuffle=False)
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
         coloring=nn.MSELoss()
     )
-    num_epochs = 30
+
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
-    save_path = 'temp_checkpoints/coloring'
-    
+
 
     ###### testtttttt #######
     #return
@@ -68,12 +85,12 @@ def main():
         val_dataloader=val_dataloader,
         criterion=criterion,
         optimizer=optimizer,
-        num_epochs=num_epochs,
+        num_epochs=cfg.epochs,
         active_heads=active_heads,
         combine_losses=combine_losses,
         accuracy_fun=hamming_acc,
         threshold=0.5,
-        save_path=save_path,
+        save_path='models_saved',
     )
 
 

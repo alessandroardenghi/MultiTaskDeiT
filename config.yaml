@@ -1,0 +1,10 @@
+active_heads: ['coloring']
+pixel_shuffle: True
+verbose: False
+pretrained_backbone: True
+img_size: 224
+batch_size: 16
+epochs: 30
+
+
+
