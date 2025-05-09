@@ -1,10 +1,34 @@
-active_heads: ['coloring']
+active_heads: ['coloring', 'classification', 'jigsaw']
 pixel_shuffle: True
 verbose: False
 pretrained_backbone: True
 img_size: 224
 batch_size: 16
 epochs: 30
+     
+## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
+modules_to_freeze: [
+                    'cls_token',
+                    'pos_embed',
+                    'patch_embed',
+                    'blocks',
+                    'norm',
+                    #'jigsaw_head',
+                    #'coloring_decoder',
+                    #'class_head',
+                    ]
+
+## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO UNFREEZE
+modules_to_unfreeze: [
+                    #'cls_token',
+                    #'pos_embed',
+                    #'patch_embed',
+                    #'blocks',
+                    #'norm',
+                    #'jigsaw_head',
+                    #'coloring_decoder',
+                    #'class_head',
+                    ]
 
 
 

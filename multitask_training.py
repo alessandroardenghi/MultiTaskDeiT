@@ -99,8 +99,8 @@ def train_one_epoch(
             B,P,C = outputs.pred_jigsaw.shape
             H = W = int(P**0.5)
             pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
-            pos_vector = labels.pos_vector.view(B,H,W)
-            rot_vector = labels.rot_vector.view(B,H,W)
+            pos_vector = labels.pos_vec.view(B,H,W)
+            rot_vector = labels.rot_vec.view(B,H,W)
               
             jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
                             0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
@@ -119,10 +119,10 @@ def train_one_epoch(
         # Metrics
         if 'classification' in active_heads:
             class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
-            acc_m_classification.update(accuracy_fun(class_outputs, labels), images.image_classification.shape[0])  
+            acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])  
         if 'jigsaw' in active_heads:
-            acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], pos_vector)
-            acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], rot_vector)
+            acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], labels.pos_vec)
+            acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], labels.rot_vec)
     
     epoch_loss = loss_m.avg
     epoch_classification_loss = loss_m_classification.avg
@@ -213,8 +213,8 @@ def validate(
                 B,P,C = outputs.pred_jigsaw.shape
                 H = W = int(P**0.5)
                 pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
-                pos_vector = labels.pos_vector.view(B,H,W)
-                rot_vector = labels.rot_vector.view(B,H,W)
+                pos_vector = labels.pos_vec.view(B,H,W)
+                rot_vector = labels.rot_vec.view(B,H,W)
                 
                 jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
                                 0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
