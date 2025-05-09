@@ -334,3 +334,41 @@ def freeze_submodule(model, submodule_name, freeze=True):
         else:
             print(f"Unfroze all parameters in '{submodule_name}'")
 
+
+def freeze_components(model, component_names, freeze=True):
+    """
+    Freeze or unfreeze both submodules and named parameters of a model.
+
+    Args:
+        model (torch.nn.Module): The model.
+        component_names (list[str]): Names of submodules or parameters to freeze/unfreeze.
+        freeze (bool): If True, freeze. If False, unfreeze.
+    """
+    if isinstance(component_names, str):
+        component_names = [component_names]
+
+    # Track what was found
+    found = []
+
+    # Freeze submodules
+    children = dict(model.named_children())
+    for name in component_names:
+        if name in children:
+            for param in children[name].parameters():
+                param.requires_grad = not freeze
+            found.append(name)
+
+    # Freeze standalone parameters
+    parameters = dict(model.named_parameters())
+    for name in component_names:
+        if name in parameters:
+            parameters[name].requires_grad = not freeze
+            found.append(name)
+
+    # Report results
+    for name in component_names:
+        if name in found:
+            print(f"{'Froze' if freeze else 'Unfroze'} '{name}'")
+        else:
+            print(f"[Warning] '{name}' not found as submodule or parameter")
+
