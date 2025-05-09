@@ -308,21 +308,29 @@ class JigsawAccuracy:
 def reconstruct_image(image, pos_rot_vector):
     return image
 
-def freeze_blocks_by_name(model, block_names):
-    """
-    Freezes parameters in the model based on block names.
-    This is useful for transfer learning or fine-tuning specific parts of a model.
+def freeze_submodule(model, submodule_name, freeze=True):
+        """
+        Freeze all parameters in a submodule of the model.
+        Args:
+            model (torch.nn.Module): The model containing the submodule.
+            submodule_name (str): The name of the submodule to freeze. Possible submodules:
+                - 'patch_embed'
+                - 'blocks'
+                - 'coloring_decoder'
+                - 'jigsaw_head'
+                - 'classification_head'
+            freeze (bool): If True, freeze the parameters. If False, unfreeze them.
+        """
 
-    Args:
-        model (torch.nn.Module): The model.
-        block_names (List[str]): List of blocks to freeze.
-    """
+        submodule = dict(model.named_children()).get(submodule_name, None)
+        if submodule is None:
+            raise ValueError(f"No submodule named '{submodule_name}' found in model.")
+        
+        for param in submodule.parameters():
+            param.requires_grad = not freeze
 
-    for name, module in model.named_modules():
-        print('name:',name)
-        print('module:',module)
-        if any(block_name in name for block_name in block_names):
-            for param in module.parameters():
-                print('param',param)
-                #param.requires_grad = False
-            print(f"Froze: {name}")
+        if freeze:
+            print(f"Froze all parameters in '{submodule_name}'")
+        else:
+            print(f"Unfroze all parameters in '{submodule_name}'")
+
