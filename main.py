@@ -13,13 +13,14 @@ from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from utils import load_model
 from multitask_training import train_model
-from utils import hamming_acc
+from utils import hamming_acc, freeze_submodule
 from timm import create_model
 
 def main():
 
     #active_heads = ['classification', 'coloring', 'jigsaw'] 
     active_heads = ['coloring']
+    training_mode = 'fine-tune'
 
     model = create_model('MultiTaskDeiT_tiny', 
                          do_jigsaw=False, 
@@ -55,13 +56,6 @@ def main():
     
 
     ###### testtttttt #######
-    def print_weighted_blocks(model):
-        for name, module in model.named_modules():
-            if any(p.requires_grad for p in module.parameters(recurse=False)):
-                print(name)
-    
-    #print(print_weighted_blocks(model))
-
     #return
     ###### testtttttt #######
 

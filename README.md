@@ -15,5 +15,6 @@
 - modify model to do only one encoder pass
 - change jigsaw patch size
 - parallelize training
-- logger during training: mlflow.start_run
+- logger during training: mlflow.start_run 
+- better models saving layout
 - save some images for the coloring accuracy
