@@ -86,13 +86,13 @@ def train_one_epoch(
         losses = torch.zeros(3).to(device)
         
         if 'classification' in active_heads:
-            class_loss = criterion.classification(outputs.pred_cls, labels)
+            class_loss = criterion.classification(outputs.pred_cls, labels.label_classification)
             loss_m_classification.update(class_loss.item(), images.image_classification.shape[0])
             losses[0] = class_loss
         
         if 'coloring' in active_heads:
             coloring_loss = criterion.coloring(outputs.pred_coloring, labels.ab_channels)
-            loss_m_coloring.update(coloring_loss.item(), images.image_classification.shape[0])
+            loss_m_coloring.update(coloring_loss.item(), images.image_colorization.shape[0])
             losses[1] = coloring_loss
         
         if 'jigsaw' in active_heads:
@@ -104,7 +104,7 @@ def train_one_epoch(
               
             jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
                             0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
-            loss_m_jigsaw.update(jigsaw_loss.item(), images.shape[0])
+            loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
             losses[2] = jigsaw_loss
 
         # Combine losses
@@ -119,7 +119,7 @@ def train_one_epoch(
         # Metrics
         if 'classification' in active_heads:
             class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
-            acc_m_classification.update(accuracy_fun(class_outputs, labels), images.shape[0])  
+            acc_m_classification.update(accuracy_fun(class_outputs, labels), images.image_classification.shape[0])  
         if 'jigsaw' in active_heads:
             acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], pos_vector)
             acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], rot_vector)
