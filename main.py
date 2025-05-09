@@ -15,6 +15,7 @@ from utils import load_model
 from multitask_training import train_model
 from utils import hamming_acc, freeze_components
 from timm import create_model
+from logger import TrainingLogger
 
 import yaml
 from munch import Munch
@@ -29,6 +30,8 @@ def load_config(path):
 def main():
     
     cfg = load_config('config.yaml')        # cfg dict with all attributes inside
+    logger = TrainingLogger()
+    logger.save_config(cfg, filename='config.yaml')
     
     active_heads = cfg.active_heads
     do_coloring = 'coloring' in active_heads
@@ -79,8 +82,10 @@ def main():
     ###### testtttttt #######
 
 
-    print(f"Training with active heads: {' '.join(active_heads)}")
-    print(model.count_params_by_block())
+    #print(f"Training with active heads: {' '.join(active_heads)}")
+    logger.log(f"Training with active heads: {' '.join(active_heads)}")
+    logger.log(f'\nModel Parameters: \n{model.count_params_by_block()}')
+    #print(model.count_params_by_block())
     train_model(
         model=model,
         train_dataloader=train_dataloader,
@@ -91,6 +96,7 @@ def main():
         active_heads=active_heads,
         combine_losses=combine_losses,
         accuracy_fun=hamming_acc,
+        logger=logger,
         threshold=0.5,
         save_path='models_saved',
     )

@@ -12,6 +12,7 @@ import numpy as np
 from dataset_functions.classification import ClassificationDataset
 from munch import Munch
 from utils import AverageMeter, JigsawAccuracy, save_model
+from logger import TrainingLogger
 
 def move_to_device(munch_obj, device):
     return Munch({k: v.to(device) if isinstance(v, torch.Tensor) else v
@@ -268,6 +269,7 @@ def train_model(
     active_heads: list, # control which heads are active
     combine_losses: callable, # function to combine the losses (it is a partial function)
     accuracy_fun: callable, # function to calculate classification accuracy
+    logger: TrainingLogger, # logger to log the training process
     threshold: float = 0.5, # threshold for classification
     save_path: str = None, # path to save the model
     ):
@@ -298,7 +300,7 @@ def train_model(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    print(f"\nStart training")
+    logger.log(f"\nStart training")
     for epoch in range(num_epochs):
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
@@ -325,28 +327,46 @@ def train_model(
             threshold=threshold
         )
 
+        logger.log_epoch(epoch=epoch, 
+                        train_metrics=train_metrics, 
+                        val_metrics=val_metrics, 
+        )
+        logger.best_model(model=model,
+                        optimizer=optimizer, 
+                        epoch=epoch, 
+                        val_loss=val_metrics.val_epoch_loss
+        )
         # Print metrics
-        print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | \
-            Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | \
-            Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | \
-            Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
-        print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | \
-            Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | \
-            Train Jigsaw Pos TopN Acc: {train_metrics.train_epoch_jigsaw_pos_topnaccuracy:.4f} | \
-            Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
-        print('='*50)
-        print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | \
-            Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | \
-            Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | \
-            Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
-        print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | \
-            Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | \
-            Val Jigsaw Pos TopN Acc: {val_metrics.val_epoch_jigsaw_pos_topnaccuracy:.4f} | \
-            Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}\n")
-        print('='*170)
+        # print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | \
+        #     Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | \
+        #     Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | \
+        #     Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
+        # print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | \
+        #     Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | \
+        #     Train Jigsaw Pos TopN Acc: {train_metrics.train_epoch_jigsaw_pos_topnaccuracy:.4f} | \
+        #     Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
+        # print('='*50)
+        # print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | \
+        #     Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | \
+        #     Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | \
+        #     Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
+        # print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | \
+        #     Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | \
+        #     Val Jigsaw Pos TopN Acc: {val_metrics.val_epoch_jigsaw_pos_topnaccuracy:.4f} | \
+        #     Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}\n")
+        # print('='*170)
 
-    print(f"Training completed")
+    logger.log(f"Training completed")
+    logger.log_epoch(epoch=epoch, 
+                    train_metrics=train_metrics, 
+                    val_metrics=val_metrics, 
+                    save_log=True
+    )
+    # Save the model
+    logger.save_checkpoint(model=model, 
+                        optimizer=optimizer, 
+                        epoch=epoch
+    )
 
-
-    if save_path is not None:
-        save_model(model, path=save_path)
+    # if save_path is not None:
+    #     save_model(model, path=save_path)

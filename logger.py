@@ -82,7 +82,7 @@ class TrainingLogger:
         elif level == "debug":
             self.logger.debug(message)
 
-    def log_epoch(self, epoch: int, train_metrics: Munch, val_metrics: Munch, save_log=True):
+    def log_epoch(self, epoch: int, train_metrics: Munch, val_metrics: Munch, save_log=False):
         self.log_metrics.append({
             "epoch": epoch,
             "train_loss": train_metrics.train_epoch_loss,
