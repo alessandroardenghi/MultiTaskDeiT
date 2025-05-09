@@ -17,7 +17,7 @@ def jigsaw_image(image : np.array,
     if image.shape[0] % n != 0:
         raise ValueError("Image dimensions must be divisible by n.")
     
-    transformation_vector = [[idx, 0, 0] for idx in range(n**2)]
+    transformation_vector = [[idx, 0] for idx in range(n**2)]
     # idx indicates what is the index of the current patch in the original image
     # the second entry indicates the rotation applied to the patch (0, 90, 180, 270)
     # the third entry indicates the flip applied (0 = no flip, 1 = horizontal flip, 2 = vertical flip)
@@ -51,15 +51,15 @@ def jigsaw_image(image : np.array,
             transformation_vector[idx][1] = rot_idx
     
     # APPLYING FLIP
-    if flip:
-        for idx, patch in enumerate(patches):   
-            flip = np.random.choice([0, 1, 2])
-            if flip == 1:  # Horizontal flip
-                patch = np.fliplr(patch)
-            elif flip == 2:  # Vertical flip
-                patch = np.flipud(patch)
-            patches[idx] = patch
-            transformation_vector[idx][2] = flip
+    # if flip:
+    #     for idx, patch in enumerate(patches):   
+    #         flip = np.random.choice([0, 1, 2])
+    #         if flip == 1:  # Horizontal flip
+    #             patch = np.fliplr(patch)
+    #         elif flip == 2:  # Vertical flip
+    #             patch = np.flipud(patch)
+    #         patches[idx] = patch
+    #         transformation_vector[idx][2] = flip
     
     # RECONSTRUCTING IMAGE
     transformed_image = np.zeros_like(image)

@@ -32,10 +32,7 @@ class MultiTaskDeiT(VisionTransformer):
             self.class_head = torch.nn.Linear(self.head.in_features, n_classes)  
 
     def forward_jigsaw(self, x):
-        ## NEED TO WRITE THE FUNCTION TO JIGSAW
-        x = add_gaussian_noise(x)
-        x = grayscale_weighted_3ch(x)
-        x, pos_vector, rot_vector = jigsaw_batch(x, n_patches=int(self.num_patches**0.5))
+        
         x = self.patch_embed(x)
 
         # append cls token
@@ -49,9 +46,8 @@ class MultiTaskDeiT(VisionTransformer):
         x = self.norm(x)
         x = self.jigsaw_head(x[:, 1:])
         #print(self.device)
-        pos_vector = pos_vector.to(self.device)
-        rot_vector = rot_vector.to(self.device)
-        return x, pos_vector, rot_vector
+
+        return x
 
     def forward_cls(self, x): 
         x = self.patch_embed(x)
@@ -68,10 +64,8 @@ class MultiTaskDeiT(VisionTransformer):
         return x
     
     def forward_denoising_coloring(self, x): 
-        x = add_gaussian_noise(x)
-        x = grayscale_weighted_3ch(x)
+
         x = self.patch_embed(x)
-    
         x = x + self.pos_embed[:, 1:, :]
 
         # append cls token
@@ -127,21 +121,21 @@ class MultiTaskDeiT(VisionTransformer):
         
 
     def forward(self, x, mode='standard'):
+        # x is a Munch dict with image_classification, image_colorization and image_jigsaw
+        
         self.device = next(self.parameters()).device
         if mode == 'reconstruction':
             return self.forward_inference(x)
             
         out = Munch()
         if self.do_classification:
-            pred_cls = self.forward_cls(x)
+            pred_cls = self.forward_cls(x.image_classification)
             out.pred_cls = pred_cls
         if self.do_jigsaw:
-            pred_jigsaw, pos_vector, rot_vector = self.forward_jigsaw(x)
+            pred_jigsaw = self.forward_jigsaw(x.image_jigsaw)
             out.pred_jigsaw = pred_jigsaw
-            out.pos_vector = pos_vector
-            out.rot_vector = rot_vector
         if self.do_coloring:
-            pred_coloring = self.forward_denoising_coloring(x)
+            pred_coloring = self.forward_denoising_coloring(x.image_colorization)
             out.pred_coloring = pred_coloring
         return out
             

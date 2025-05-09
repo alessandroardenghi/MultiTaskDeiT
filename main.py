@@ -7,7 +7,7 @@ import models.model_registry
 import timm
 import os
 import numpy as np
-from dataset_functions.classification import ClassificationDataset
+from dataset_functions.classification import ClassificationDataset, MultiTaskDataset
 from munch import Munch
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
@@ -35,8 +35,11 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    train_dataset = ClassificationDataset('data', split='train', transform=transform)
-    val_dataset = ClassificationDataset('data', split='val', transform=transform)
+    #train_dataset = ClassificationDataset('data', split='train', transform=transform)
+    #val_dataset = ClassificationDataset('data', split='val', transform=transform)
+
+    train_dataset = MultiTaskDataset('data', split='train', img_size = 224, num_patches=14)
+    val_dataset = MultiTaskDataset('data', split='val', img_size = 224, num_patches=14)
 
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False)
