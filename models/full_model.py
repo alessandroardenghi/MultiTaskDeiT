@@ -26,11 +26,11 @@ class MultiTaskDeiT(VisionTransformer):
         if self.do_coloring and not pixel_shuffle:
             self.coloring_decoder = ColorizationDecoder(embed_dim=self.embed_dim)
         if self.do_coloring and pixel_shuffle:
-            self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, upscale_factor=16, out_channels=3)
+            self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, upscale_factor=16, out_channels=2)
             
-        if self.do_classification and n_classes != 1000:
+        if self.do_classification:
             self.class_head = torch.nn.Linear(self.head.in_features, n_classes)  
-
+    
     def forward_jigsaw(self, x):
         
         x = self.patch_embed(x)

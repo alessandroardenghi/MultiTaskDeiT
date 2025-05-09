@@ -89,9 +89,9 @@ class MultiTaskDataset(Dataset):
         
         #image_classification = self.transform_classification(image)
     
-        image_coloring, ab_channels = preprocess_for_coloring(image)
-        image_classification = image_coloring.clone()
-        image_jigsaw, pos_vec, rot_vec = jigsaw_single_image(image_coloring, n_patches = self.num_patches)
+        image_colorization, ab_channels = preprocess_for_coloring(image)
+        image_classification = image_colorization.clone()
+        image_jigsaw, pos_vec, rot_vec = jigsaw_single_image(image_colorization, n_patches = self.num_patches)
     
         
         if image_name not in self.labels_dict.keys():
@@ -101,7 +101,7 @@ class MultiTaskDataset(Dataset):
         label_classification = torch.tensor(label_classification, dtype=torch.float32)
         
         images = Munch(image_classification=image_classification,
-                        image_colorization=image_coloring,
+                        image_colorization=image_colorization,
                         image_jigsaw=image_jigsaw)
         labels = Munch(label_classification=label_classification,
                         ab_channels=ab_channels,

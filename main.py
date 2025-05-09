@@ -26,15 +26,15 @@ def main():
                          do_jigsaw=False, 
                          do_classification=False, 
                          do_coloring=True, 
-                         pixel_shuffle=False,
+                         pixel_shuffle=True,
                          verbose=False,
                          pretrained=True) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
 
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    # transform = transforms.Compose([
+    #     transforms.Resize((224, 224)),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    # ])
 
     #train_dataset = ClassificationDataset('data', split='train', transform=transform)
     #val_dataset = ClassificationDataset('data', split='val', transform=transform)

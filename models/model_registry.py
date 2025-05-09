@@ -80,7 +80,9 @@ def MultiTaskDeiT_tiny(do_jigsaw,
         # Update the model's state dict
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
-
+        
+        del model.head          # MIGHT GIVE PROBLEMS
+        
         # Print updated and not updated layers
         if verbose:
             print("\nUpdated layers:")
