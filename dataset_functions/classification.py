@@ -6,6 +6,8 @@ import torch
 import torchvision.transforms as transforms
 from utils import jigsaw_single_image
 from munch import Munch
+import cv2
+import numpy as np
 
 def preprocess_for_coloring(pil_img):
     """
@@ -21,9 +23,8 @@ def preprocess_for_coloring(pil_img):
     # Convert RGB to LAB using OpenCV
     lab = cv2.cvtColor(rgb_np, cv2.COLOR_RGB2LAB).astype(np.float32)  # LAB: L∈[0,100], a/b∈[-128,127]
 
-    # Split channels
-    L = lab[:, :, 0] / 100.0                   # Normalize L to [0, 1]
-    ab = lab[:, :, 1:] / 127.0                 # Normalize ab to roughly [-1, 1]
+    L = lab[:, :, 0] / 255.0                   # Normalize L to [0, 1]
+    ab = (lab[:, :, 1:] - 128)/ 127.0                 # Normalize ab to roughly [-1, 1]
 
     # Convert to PyTorch tensors
     L_tensor = torch.from_numpy(L).unsqueeze(0)               # Shape: [1, H, W]

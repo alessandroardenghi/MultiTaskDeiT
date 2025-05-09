@@ -4,6 +4,7 @@ import random
 from munch import Munch
 import os
 import torch.nn as nn
+import cv2
 
 def jigsaw_image(image : np.array, 
                  n: int, 
@@ -371,4 +372,47 @@ def freeze_components(model, component_names, freeze=True):
             print(f"{'Froze' if freeze else 'Unfroze'} '{name}'")
         else:
             print(f"[Warning] '{name}' not found as submodule or parameter")
+            
+import cv2
+import numpy as np
+
+def recolor_image(L, ab):
+    # Ensure L and ab are properly formatted
+    L_denorm = L[0].numpy() * 255.0  # Shape: [H, W], denormalize L channel
+    ab_denorm = (ab.numpy() * 127.0) + 128    # Shape: [2, H, W], denormalize a/b channels
+    
+    # Ensure L and ab are in valid range
+    L_denorm = np.clip(L_denorm, 0, 255)
+    ab_denorm = np.clip(ab_denorm, 0, 255)
+
+    # Stack L and ab channels to get LAB image
+    # ab_denorm is [2, H, W], we need to transpose it so it becomes [H, W, 2]
+    ab_denorm = np.transpose(ab_denorm, (1, 2, 0))  # Shape: [H, W, 2]
+    # Stack L channel and ab channels to form LAB image (Shape: [H, W, 3])
+    lab_denorm = np.concatenate([L_denorm[..., np.newaxis], ab_denorm], axis=-1)  # Shape: [H, W, 3]
+    
+    # Convert LAB to RGB using OpenCV
+    rgb_reconstructed = cv2.cvtColor(lab_denorm.astype(np.uint8), cv2.COLOR_LAB2RGB)
+
+    # Clip the result to ensure it is in the valid range [0, 255]
+    rgb_reconstructed = np.clip(rgb_reconstructed, 0, 255).astype(np.uint8)
+
+    return rgb_reconstructed
+
+from dataset_functions.classification import MultiTaskDataset
+from torch.utils.data import DataLoader
+from PIL import Image
+
+def recolor_images(data_path, output_dir, split, model, n_images, shuffle=False):
+    os.mkdir(output_dir)
+    dataset = MultiTaskDataset(data_path, split=split)
+    loader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
+    for i, (images, labels) in enumerate(loader):
+        if i >= n_images:
+            break
+        output = model(images)
+        #colored_img = recolor_image(images.image_colorization[0], labels.ab_channels[0])
+        colored_img = recolor_image(images.image_colorization[0].detach(), output.pred_coloring[0].detach())
+        colored_img = Image.fromarray(colored_img)
+        colored_img.save(os.path.join(output_dir,f'image{i}.jpg'))
 
