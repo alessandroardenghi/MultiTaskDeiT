@@ -102,9 +102,9 @@ class MultiTaskDataset(Dataset):
     
         image_colorization, ab_channels = preprocess_for_coloring(image)
         image_classification = image_colorization.clone()
-        image_jigsaw, pos_vec, rot_vec = jigsaw_single_image(image_colorization, n_patches = self.num_patches)
+        #image_jigsaw, pos_vec, rot_vec = jigsaw_single_image(image_colorization, n_patches = self.num_patches)
+        image_jigsaw, pos_vec, rot_vec = image_colorization.clone(), image_colorization.clone(), image_colorization.clone()
     
-        
         if image_name not in self.labels_dict.keys():
             raise Exception('LABEL NOT FOUND')
             

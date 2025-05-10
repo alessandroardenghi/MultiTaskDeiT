@@ -1,0 +1,16 @@
+!munch.Munch
+active_heads:
+- coloring
+batch_size: 16
+epochs: 50
+img_size: 224
+modules_to_freeze:
+- cls_token
+- pos_embed
+- patch_embed
+- blocks
+- norm
+modules_to_unfreeze: []
+pixel_shuffle: false
+pretrained_backbone: true
+verbose: false

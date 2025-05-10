@@ -19,7 +19,7 @@ class MultiTaskDeiT(VisionTransformer):
         self.do_jigsaw = do_jigsaw
         self.do_coloring = do_coloring
         self.do_classification = do_classification
-        
+        #self.head = None
         if self.do_jigsaw:
             self.jigsaw_head = JigsawHead(embed_dim=self.embed_dim, num_patches=self.num_patches)
         

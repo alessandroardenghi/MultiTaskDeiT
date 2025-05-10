@@ -13,7 +13,7 @@ from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from utils import load_model
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components
+from utils import hamming_acc, freeze_components, recolor_images
 from timm import create_model
 from logger import TrainingLogger
 
@@ -53,7 +53,6 @@ def main():
     #     transforms.ToTensor(),
     #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     # ])
-
     #train_dataset = ClassificationDataset('data', split='train', transform=transform)
     #val_dataset = ClassificationDataset('data', split='val', transform=transform)
 
@@ -78,7 +77,14 @@ def main():
 
 
     ###### testtttttt #######
-    #return
+    # # Load the checkpoint
+    # checkpoint_path = 'logs/run_20250510_1632/checkpoints/best_model.pth'
+    # checkpoint = torch.load(checkpoint_path, map_location='cuda')  # or 'cuda' if available
+
+    # # Restore model, optimizer, and epoch
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    # recolor_images(data_path='data', output_dir='coloring_test', split='val', model=model, n_images=16, shuffle=True)
+    # return
     ###### testtttttt #######
 
 

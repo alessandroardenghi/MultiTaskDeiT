@@ -1,10 +1,14 @@
-active_heads: ['coloring', 'classification', 'jigsaw']
-pixel_shuffle: True
+active_heads: [
+                'coloring', 
+                #'classification', 
+                #'jigsaw'
+                ]
+pixel_shuffle: False
 verbose: False
 pretrained_backbone: True
 img_size: 224
 batch_size: 16
-epochs: 30
+epochs: 50
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
 modules_to_freeze: [
