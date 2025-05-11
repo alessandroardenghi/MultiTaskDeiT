@@ -13,7 +13,7 @@ from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from utils import load_model
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images
+from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
 from timm import create_model
 from logger import TrainingLogger
 
@@ -45,8 +45,11 @@ def main():
                          pixel_shuffle = cfg.pixel_shuffle,
                          verbose = cfg.verbose,
                          pretrained = cfg.pretrained_backbone) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
-    freeze_components(model, component_names=cfg.modules_to_freeze, freeze=True)
-    freeze_components(model, component_names=cfg.modules_to_unfreeze, freeze=False)
+    
+    if cfg.pretrained_checkpoint:
+        load_partial_checkpoint(model, cfg.pretrained_checkpoint, cfg.verbose)
+    freeze_components(model, component_names=cfg.modules_to_freeze, freeze=True, verbose=cfg.verbose)
+    freeze_components(model, component_names=cfg.modules_to_unfreeze, freeze=False, verbose=cfg.verbose)
     
     # transform = transforms.Compose([
     #     transforms.Resize((224, 224)),

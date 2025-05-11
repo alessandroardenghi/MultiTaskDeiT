@@ -85,6 +85,8 @@ def MultiTaskDeiT_tiny(do_jigsaw,
         
         # Print updated and not updated layers
         if verbose:
+            print('='*100)
+            print('LAYERS IMPORTED FROM PRETRAINED BACKBONE AT INITIALIZATION')
             print("\nUpdated layers:")
             for layer in updated_layers:
                 print(f"  {layer}")
@@ -92,7 +94,7 @@ def MultiTaskDeiT_tiny(do_jigsaw,
             print("\nNot updated layers:")
             for layer in not_updated_layers:
                 print(f"  {layer}")
-        
+            print('='*100)
     return model
 
 @register_model

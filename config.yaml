@@ -4,7 +4,7 @@ active_heads: [
                 #'jigsaw'
                 ]
 pixel_shuffle: False
-verbose: False
+verbose: True
 pretrained_backbone: True
 img_size: 224
 batch_size: 16
@@ -33,6 +33,8 @@ modules_to_unfreeze: [
                     #'coloring_decoder',
                     #'class_head',
                     ]
+
+pretrained_checkpoint: 'logs/run_20250510_1326/checkpoints/best_model.pth'
 
 
 

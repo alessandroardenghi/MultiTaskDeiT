@@ -336,7 +336,7 @@ def freeze_submodule(model, submodule_name, freeze=True):
             print(f"Unfroze all parameters in '{submodule_name}'")
 
 
-def freeze_components(model, component_names, freeze=True):
+def freeze_components(model, component_names, freeze=True, verbose=False):
     """
     Freeze or unfreeze both submodules and named parameters of a model.
 
@@ -365,13 +365,16 @@ def freeze_components(model, component_names, freeze=True):
         if name in parameters:
             parameters[name].requires_grad = not freeze
             found.append(name)
-
     # Report results
-    for name in component_names:
-        if name in found:
-            print(f"{'Froze' if freeze else 'Unfroze'} '{name}'")
-        else:
-            print(f"[Warning] '{name}' not found as submodule or parameter")
+    if verbose:
+        print('=' * 100)
+        print(f'{'FREEZING' if freeze else 'UNFREEZING'} LAYERS')
+        for name in component_names:
+            if name in found:
+                print(f"{'Froze' if freeze else 'Unfroze'} '{name}'")
+            else:
+                print(f"[Warning] '{name}' not found as submodule or parameter")
+        print('='*100)
             
 import cv2
 import numpy as np
@@ -416,3 +419,42 @@ def recolor_images(data_path, output_dir, split, model, n_images, shuffle=False)
         colored_img = Image.fromarray(colored_img)
         colored_img.save(os.path.join(output_dir,f'image{i}.jpg'))
 
+def load_partial_checkpoint(model, checkpoint_path, verbose=False):
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint_state_dict = checkpoint['model_state_dict'] if 'model_state_dict' in checkpoint else checkpoint
+    model_state_dict = model.state_dict()
+    
+    updated_layers = []
+    not_updated_layers = []
+    identical_layers = []
+    
+    for k, v in model_state_dict.items():
+        if k in checkpoint_state_dict:
+            if model_state_dict[k].shape == checkpoint_state_dict[k].shape:
+                if torch.allclose(model_state_dict[k], checkpoint_state_dict[k], atol=1e-6, rtol=1e-5):
+                    identical_layers.append(k.split('.')[0])  # Extract block name
+                else:
+                    updated_layers.append(k.split('.')[0])  # Extract block name
+            else:
+                not_updated_layers.append(k.split('.')[0])  # Extract block name
+        else:
+            not_updated_layers.append(k.split('.')[0])  # Extract block name
+
+    # Update only matching layers
+    updated_state_dict = {k: v for k, v in checkpoint_state_dict.items() if k in model_state_dict and model_state_dict[k].shape == v.shape}
+    model_state_dict.update(updated_state_dict)
+    model.load_state_dict(model_state_dict)
+
+    # Remove duplicates from block names
+    updated_layers = list(set(updated_layers))
+    not_updated_layers = list(set(not_updated_layers))
+    identical_layers = list(set(identical_layers))
+
+    # Print results
+    if verbose:
+        print('='*100)
+        print('LAYERS UPDATED FROM LOCAL CHECKPOINT')
+        print(f"Updated blocks ({len(updated_layers)}): {updated_layers}")
+        print(f"Identical blocks ({len(identical_layers)}): {identical_layers}")
+        print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
+        print('='*100)
