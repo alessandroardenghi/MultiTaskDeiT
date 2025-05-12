@@ -100,19 +100,22 @@ def MultiTaskDeiT_tiny(do_jigsaw,
     return model
 
 @register_model
-def MultiTaskDeiT_small(do_jigsaw, do_coloring, 
-                        do_classification, 
-                        pixel_shuffle,
-                        pretrained_cfg,
-                        pretrained_cfg_overlay,
-                        cache_dir,
-                        verbose=False,
-                        pretrained=False):
+def MultiTaskDeiT_small(do_jigsaw, 
+                       do_coloring, 
+                       do_classification, 
+                       pixel_shuffle, 
+                       n_jigsaw_patches,
+                       pretrained_cfg,
+                       pretrained_cfg_overlay,
+                       cache_dir,
+                       verbose=False,
+                       pretrained=False):
     
     model = MultiTaskDeiT(do_jigsaw=do_jigsaw, 
                           do_coloring=do_coloring, 
                           do_classification=do_classification,
                           pixel_shuffle=pixel_shuffle,
+                          n_jigsaw_patches=n_jigsaw_patches,
                           n_classes=20,
                           img_size=224,
                           patch_size=16,

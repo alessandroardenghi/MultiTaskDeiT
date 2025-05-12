@@ -37,7 +37,7 @@ def main():
     do_classification = 'classification' in active_heads
     do_jigsaw = 'jigsaw' in active_heads
     
-    model = create_model('MultiTaskDeiT_tiny', 
+    model = create_model(cfg.model_name, 
                          do_jigsaw = do_jigsaw, 
                          do_classification = do_classification, 
                          do_coloring = do_coloring, 
@@ -59,7 +59,7 @@ def main():
     #train_dataset = ClassificationDataset('data', split='train', transform=transform)
     #val_dataset = ClassificationDataset('data', split='val', transform=transform)
     
-    print(model)
+    #print(model)
     assert (cfg.img_size / 16) % cfg.jigsaw_patches == 0
     
     train_dataset = MultiTaskDataset(cfg.data_path, split='train', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches)
@@ -67,16 +67,18 @@ def main():
 
     train_dataloader = DataLoader(train_dataset, 
                                   batch_size=cfg.batch_size, 
-                                  shuffle=True)
+                                  shuffle=True,
+                                  num_workers=32)
     
     val_dataloader = DataLoader(val_dataset, 
                                 batch_size=cfg.batch_size, 
-                                shuffle=False)
+                                shuffle=False,
+                                num_workers=32)
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
-        #coloring=nn.MSELoss()
-        coloring=HuberLoss()
+        coloring=nn.MSELoss()
+        #coloring=HuberLoss()
     )
 
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
@@ -93,6 +95,8 @@ def main():
     # recolor_images(data_path='data', output_dir='coloring_test', split='val', model=model, n_images=16, shuffle=True)
     # return
     ###### testtttttt #######
+    # recolor_images(data_path='data', output_dir='coloring_test3', split='val', model=model, n_images=100, shuffle=True)
+    # return
 
 
     #print(f"Training with active heads: {' '.join(active_heads)}")

@@ -74,6 +74,8 @@ def train_one_epoch(
         
         images = move_to_device(images, device)
         labels = move_to_device(labels, device)
+        print(f"Model is on device: {next(model.parameters()).device}")
+        print(device)
         
         
         # Forward and losses calculation
@@ -306,23 +308,23 @@ def train_model(
         os.makedirs(save_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
-
+    print(f"Model is on device: {next(model.parameters()).device}")
     logger.log(f"\nStart training")
     for epoch in range(num_epochs):
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
-        # train_metrics = train_one_epoch(
-        #     model=model,
-        #     data_loader=train_dataloader,
-        #     criterion=criterion,
-        #     optimizer=optimizer,
-        #     device=device,
-        #     epoch=epoch,
-        #     active_heads=active_heads,
-        #     combine_losses=combine_losses,
-        #     accuracy_fun=accuracy_fun,
-        #     threshold=threshold
-        # )
+        train_metrics = train_one_epoch(
+            model=model,
+            data_loader=train_dataloader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
+            epoch=epoch,
+            active_heads=active_heads,
+            combine_losses=combine_losses,
+            accuracy_fun=accuracy_fun,
+            threshold=threshold
+        )
         val_metrics = validate(
             model=model,
             data_loader=val_dataloader,

@@ -1,3 +1,4 @@
+model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
 jigsaw_patches: 2
 active_heads: [
@@ -5,11 +6,11 @@ active_heads: [
                 #'classification', 
                 'jigsaw'
                 ]
-pixel_shuffle: True
-verbose: True
+pixel_shuffle: False
+verbose: False
 pretrained_backbone: True
 img_size: 224
-batch_size: 16
+batch_size: 32
 epochs: 50
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
@@ -36,7 +37,7 @@ modules_to_unfreeze: [
                     #'class_head',
                     ]
 
-pretrained_checkpoint: 'logs/run_20250510_1326/checkpoints/best_model.pth'
+pretrained_checkpoint: ''
 
 
 
