@@ -1,7 +1,9 @@
+data_path: 'data'
+jigsaw_patches: 2
 active_heads: [
                 #'coloring', 
-                'classification', 
-                #'jigsaw'
+                #'classification', 
+                'jigsaw'
                 ]
 pixel_shuffle: True
 verbose: True

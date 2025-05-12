@@ -97,14 +97,17 @@ def train_one_epoch(
             losses[1] = coloring_loss
         
         if 'jigsaw' in active_heads:
-            B,P,C = outputs.pred_jigsaw.shape
+            B,P,C = outputs.pred_jigsaw_pos.shape
             H = W = int(P**0.5)
-            pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
+            
+            pred_pos = outputs.pred_jigsaw_pos.view(B,H,W,C).permute(0, 3, 1, 2)
+            pred_rot = outputs.pred_jigsaw_rot.view(B,H,W,4).permute(0, 3, 1, 2)
             pos_vector = labels.pos_vec.view(B,H,W)
             rot_vector = labels.rot_vec.view(B,H,W)
+            
               
-            jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
-                            0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
+            jigsaw_loss = 0.5 * criterion.jigsaw(pred_pos, pos_vector) + \
+                            0.5 * criterion.jigsaw(pred_rot, rot_vector)
             loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
             losses[2] = jigsaw_loss
 
@@ -121,9 +124,10 @@ def train_one_epoch(
         if 'classification' in active_heads:
             class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
             acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])  
+        
         if 'jigsaw' in active_heads:
-            acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], labels.pos_vec)
-            acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], labels.rot_vec)
+            acc_m_pos.update(outputs.pred_jigsaw_pos, labels.pos_vec)
+            acc_m_rot.update(outputs.pred_jigsaw_rot, labels.rot_vec)
     
     epoch_loss = loss_m.avg
     epoch_classification_loss = loss_m_classification.avg
@@ -211,14 +215,17 @@ def validate(
                 losses[1] = coloring_loss
             
             if 'jigsaw' in active_heads:
-                B,P,C = outputs.pred_jigsaw.shape
+                B,P,C = outputs.pred_jigsaw_pos.shape
                 H = W = int(P**0.5)
-                pred_jigsaw2d = outputs.pred_jigsaw.view(B,H,W,C).permute(0, 3, 1, 2)
+                
+                pred_pos = outputs.pred_jigsaw_pos.view(B, H, W, C).permute(0, 3, 1, 2)
+                pred_rot = outputs.pred_jigsaw_rot.view(B, H, W, 4).permute(0, 3, 1, 2)
+                
                 pos_vector = labels.pos_vec.view(B,H,W)
                 rot_vector = labels.rot_vec.view(B,H,W)
                 
-                jigsaw_loss = 0.5 * criterion.jigsaw(pred_jigsaw2d[:,:P,:,:], pos_vector) + \
-                                0.5 * criterion.jigsaw(pred_jigsaw2d[:,P:,:,:], rot_vector)
+                jigsaw_loss = 0.5 * criterion.jigsaw(pred_pos, pos_vector) + \
+                                0.5 * criterion.jigsaw(pred_rot, rot_vector)
                 loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
                 losses[2] = jigsaw_loss
 
@@ -231,8 +238,8 @@ def validate(
                 class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
                 acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])
             if 'jigsaw' in active_heads:
-                acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], pos_vector)
-                acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], rot_vector)
+                acc_m_pos.update(outputs.pred_jigsaw_pos, labels.pos_vec)
+                acc_m_rot.update(outputs.pred_jigsaw_rot, labels.rot_vec)
     
     epoch_loss = loss_m.avg
     epoch_classification_loss = loss_m_classification.avg
@@ -304,18 +311,18 @@ def train_model(
     for epoch in range(num_epochs):
 
         print(f"\nEpoch {epoch+1}/{num_epochs}")
-        train_metrics = train_one_epoch(
-            model=model,
-            data_loader=train_dataloader,
-            criterion=criterion,
-            optimizer=optimizer,
-            device=device,
-            epoch=epoch,
-            active_heads=active_heads,
-            combine_losses=combine_losses,
-            accuracy_fun=accuracy_fun,
-            threshold=threshold
-        )
+        # train_metrics = train_one_epoch(
+        #     model=model,
+        #     data_loader=train_dataloader,
+        #     criterion=criterion,
+        #     optimizer=optimizer,
+        #     device=device,
+        #     epoch=epoch,
+        #     active_heads=active_heads,
+        #     combine_losses=combine_losses,
+        #     accuracy_fun=accuracy_fun,
+        #     threshold=threshold
+        # )
         val_metrics = validate(
             model=model,
             data_loader=val_dataloader,

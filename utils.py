@@ -213,26 +213,6 @@ def save_model(model, path=None, name = None):
     torch.save(model.state_dict(), path)
     print(f"Model saved to {path}")
 
-def load_model(model_arch, model_name, path=None):
-    """
-    Load the model from a specified path.
-    Parameters:
-    - model_arch (nn.Module): The architecture of the model.
-    - model (str): The model to be loaded.
-    - path (str): Path to load the model from.
-    Returns:
-    - model (nn.Module): The loaded model.
-    """
-    
-    if path is None:
-        path = f"{model_name}.pth"
-    else:
-        path = path + f"/{model_name}.pth"
-    
-    model.load_state_dict(torch.load(path, weight_only=True))
-    print(f"Model loaded from {path}")
-    return model
-
 
 class AverageMeter:
     """Computes and stores the average and current value"""
