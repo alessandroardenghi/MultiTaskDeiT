@@ -229,7 +229,7 @@ def validate(
             # Metrics
             if 'classification' in active_heads:
                 class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
-                acc_m_classification.update(accuracy_fun(class_outputs, labels), images.image_classification.shape[0])
+                acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])
             if 'jigsaw' in active_heads:
                 acc_m_pos.update(outputs.pred_jigsaw[:,:,:P], pos_vector)
                 acc_m_rot.update(outputs.pred_jigsaw[:,:,P:], rot_vector)

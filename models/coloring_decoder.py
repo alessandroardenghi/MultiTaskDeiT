@@ -24,7 +24,9 @@ class ColorizationDecoder(nn.Module):
         return self.decoder(x)
     
     
-
+# x = rearrange(x, 'b (p1 p2) c -> b c p1 p2', p1=self.window_size, p2=self.window_size)
+#         x = self.head(x)
+#         x = rearrange(x, 'b c p1 p2 -> b (p1 p2) c')
 class ColorizationDecoderPixelShuffle(nn.Module):
     def __init__(self, embed_dim=384, upscale_factor=16, out_channels=2):
         super().__init__()
@@ -32,20 +34,21 @@ class ColorizationDecoderPixelShuffle(nn.Module):
         self.proj = nn.Conv2d(
             in_channels=embed_dim,
             out_channels=out_channels * (upscale_factor ** 2),
-            kernel_size=1,
-            padding=0,
-            bias=True
+            kernel_size=3,
+            padding=1,
+            stride=1,
+            padding_mode='reflect'
         )
         # PixelShuffle for sub-pixel upsampling
         self.pixel_shuffle = nn.PixelShuffle(upscale_factor=upscale_factor)
-        # Optional smoothing conv after shuffle (can help reduce artifacts)
-        self.smooth = nn.Conv2d(
-            in_channels=out_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            padding=1,
-            bias=True
-        )
+        # # Optional smoothing conv after shuffle (can help reduce artifacts)
+        # self.smooth = nn.Conv2d(
+        #     in_channels=out_channels,
+        #     out_channels=out_channels,
+        #     kernel_size=3,
+        #     padding=1,
+        #     bias=True
+        # )
         self.activation = nn.Tanh()  # or nn.Tanh() / identity, depending on range
 
     def forward(self, x):
@@ -56,7 +59,7 @@ class ColorizationDecoderPixelShuffle(nn.Module):
 
         # project to sub-pixel channels
         x = self.proj(x)              # (B, out_channels*r^2, H, W)
+        x = self.activation(x)
         x = self.pixel_shuffle(x)      # (B, out_channels, H*r, W*r)
-        x = self.smooth(x)             # optional smoothing
-        x = self.activation(x)         # normalize to [0,1]
+        #x = self.smooth(x)             # optional smoothing
         return x

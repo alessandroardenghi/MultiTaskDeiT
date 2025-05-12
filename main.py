@@ -13,7 +13,7 @@ from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from utils import load_model
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
+from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, HuberLoss
 from timm import create_model
 from logger import TrainingLogger
 
@@ -72,7 +72,8 @@ def main():
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
-        coloring=nn.MSELoss()
+        #coloring=nn.MSELoss()
+        coloring=HuberLoss()
     )
 
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)

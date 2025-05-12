@@ -1,9 +1,9 @@
 active_heads: [
-                'coloring', 
-                #'classification', 
+                #'coloring', 
+                'classification', 
                 #'jigsaw'
                 ]
-pixel_shuffle: False
+pixel_shuffle: True
 verbose: True
 pretrained_backbone: True
 img_size: 224
