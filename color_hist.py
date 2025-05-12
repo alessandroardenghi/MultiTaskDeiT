@@ -6,6 +6,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 import torch
+import os
+from scipy.ndimage import gaussian_filter
+
 
 def quantize_ab_channels(ab_tensor, bin_size=0.1, vmin=-1.0, vmax=1.0):
     """
@@ -28,17 +31,9 @@ def quantize_ab_channels(ab_tensor, bin_size=0.1, vmin=-1.0, vmax=1.0):
 
     return bin_indices
 
-import torch
-
-# Example: ab_bin_indices has shape (B, 2, H, W), with values in [0, 19]
-# Assuming ab_bin_indices is from quantize_ab_channels()
 def compute_ab_histogram(ab_bin_indices, num_bins=20):
-    # Split a and b
-    a_bins = ab_bin_indices[:, 0, :, :].reshape(-1)  # shape: (B*H*W,)
-    b_bins = ab_bin_indices[:, 1, :, :].reshape(-1)
-
-    # Create 2D histogram
-    hist = torch.zeros((num_bins, num_bins), dtype=torch.float32, device=ab_bin_indices.device)
+    a_bins = ab_bin_indices[:, 0, :, :].reshape(-1) # new shape: (B*H*W,) -> flattening
+    b_bins = ab_bin_indices[:, 1, :, :].reshape(-1) # new shape: (B*H*W,) -> flattening
 
     # Compute 1D flat indices: index = a * num_bins + b
     indices = a_bins * num_bins + b_bins
@@ -50,20 +45,35 @@ def compute_ab_histogram(ab_bin_indices, num_bins=20):
     return hist
 
 def main():
-    df = MultiTaskDataset('data', split='train', img_size = 224, num_patches=4)
+    lossdir = 'lossweights'
+    if not os.path.exists(lossdir):
+        os.makedirs(lossdir)
 
+    df = MultiTaskDataset('data', split='train', img_size = 224, num_patches=4)
     dl = DataLoader(df, 
                     batch_size=32, 
                     shuffle=False,
                     num_workers=32)
 
-    hist = torch.zeros((20,20), dtype=np.float32)
+    l = -1
+    u = 1
+    interval_size = u - l
+    num_bins = 20
+    bin_size = interval_size / num_bins
 
+    global_hist = torch.zeros((20, 20), dtype=torch.float32)
     for img,label in dl:
-        ab = label.ab_image
-        print(ab.shape)
-        break
+        ab = label.ab_channels
+        ab_bins = quantize_ab_channels(ab, bin_size=bin_size, vmin=l, vmax=u)
+        
+        hist = compute_ab_histogram(ab_bins, num_bins=num_bins)
+        global_hist += hist
 
+    global_hist_np = global_hist.cpu().numpy()
+    smoothed_np = gaussian_filter(global_hist_np, sigma=1.0)  # Try sigma=1.0 or 2.0
+
+    np.save(os.path.join(lossdir, 'hist.npy'), global_hist_np)
+    np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
 
 
 if __name__ == "__main__":
