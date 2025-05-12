@@ -52,7 +52,7 @@ def compute_ab_histogram(ab_bin_indices, num_bins=20):
 def main():
     df = MultiTaskDataset('data', split='train', img_size = 224, num_patches=4)
 
-    dl = DataLoader(train_dataset, 
+    dl = DataLoader(df, 
                     batch_size=32, 
                     shuffle=False,
                     num_workers=32)
