@@ -9,6 +9,7 @@ import os
 import numpy as np
 from dataset_functions.multitask_dataloader import MultiTaskDataset
 from munch import Munch
+from loss import WeightedL1Loss, WeightedMSELoss
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from multitask_training import train_model
@@ -100,7 +101,8 @@ def main():
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
-        coloring=nn.MSELoss()
+        #coloring=nn.MSELoss(),
+        coloring=WeightedL1Loss(reduction='sum')
     )
 
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
@@ -117,8 +119,8 @@ def main():
     # recolor_images(data_path='data', output_dir='coloring_test', split='val', model=model, n_images=16, shuffle=True)
     # return
     ###### testtttttt #######
-    # recolor_images(data_path='data', output_dir='coloring_test3', split='val', model=model, n_images=100, shuffle=True)
-    # return
+    recolor_images(data_path='data', output_dir='coloring_test5', split='val', model=model, n_images=100, shuffle=True)
+    return
 
 
     #print(f"Training with active heads: {' '.join(active_heads)}")

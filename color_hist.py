@@ -56,7 +56,7 @@ def main(weights_path = None):
     if not os.path.exists(lossdir):
         os.makedirs(lossdir)
 
-    df = MultiTaskDataset('data', split='train', img_size = 224, num_patches=4)
+    df = MultiTaskDataset('data', split='train', img_size = 224, do_coloring=True, num_patches=4)
     dl = DataLoader(df, 
                     batch_size=32, 
                     shuffle=False,
@@ -65,11 +65,11 @@ def main(weights_path = None):
     l = -1
     u = 1
     interval_size = u - l
-    num_bins = 20
+    num_bins = 25
     bin_size = interval_size / num_bins
 
     if weights_path is None:
-        global_hist = torch.zeros((20, 20), dtype=torch.float32)
+        global_hist = torch.zeros((num_bins, num_bins), dtype=torch.float32)
         for img,label in dl:
             ab = label.ab_channels
             ab_bins = quantize_ab_channels(ab, bin_size=bin_size, vmin=l, vmax=u)
@@ -78,10 +78,10 @@ def main(weights_path = None):
             global_hist += hist
 
         global_hist_np = global_hist.cpu().numpy()
-        smoothed_np = gaussian_filter(global_hist_np, sigma=5.0)  # Try sigma=1.0 or 2.0
+        smoothed_np = gaussian_filter(global_hist_np, sigma=3.0)  # Try sigma=1.0 or 2.0
 
-        np.save(os.path.join(lossdir, 'hist.npy'), global_hist_np)
-        np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
+        np.save(os.path.join(lossdir, 'hist_25_bins.npy'), global_hist_np)
+        #np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
 
     else:
         global_hist_np = np.load(weights_path)
@@ -90,7 +90,7 @@ def main(weights_path = None):
     p_tilde = gaussian_filter(p, sigma=5.0)
     Q = np.count_nonzero(global_hist_np)
     w = get_weight_matrix(p_tilde, Q)
-    np.save(os.path.join(lossdir, 'weights.npy'), w)
+    np.save(os.path.join(lossdir, 'weights_25_bins_sigma_3.npy'), w)
         
 if __name__ == "__main__":
-    main('lossweights/hist.npy')
+    main()

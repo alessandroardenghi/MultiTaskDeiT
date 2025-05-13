@@ -6,22 +6,22 @@ active_heads: [
                 #'classification', 
                 #'jigsaw'
                 ]
-pixel_shuffle: True
+pixel_shuffle: False
 verbose: False
 pretrained_backbone: True
 img_size: 224
 batch_size: 32
 epochs: 50
 weights: 'lossweights/weights.npy'
-n_workers: 0
+n_workers: 32
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
 modules_to_freeze: [
-                    'cls_token',
-                    'pos_embed',
-                    'patch_embed',
-                    'blocks',
-                    'norm',
+                    #'cls_token',
+                    #'pos_embed',
+                    #'patch_embed',
+                    #'blocks',
+                    #'norm',
                     #'jigsaw_head',
                     #'coloring_decoder',
                     #'class_head',
@@ -39,7 +39,7 @@ modules_to_unfreeze: [
                     #'class_head',
                     ]
 
-pretrained_checkpoint: ''
+pretrained_checkpoint: 'logs/run_20250513_1517/checkpoints/best_model.pth'
 
 
 
