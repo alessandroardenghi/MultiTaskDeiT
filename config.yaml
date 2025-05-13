@@ -1,6 +1,6 @@
 model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
-jigsaw_patches: 2
+jigsaw_patches: 7
 active_heads: [
                 #'coloring', 
                 #'classification', 
@@ -15,11 +15,11 @@ epochs: 50
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
 modules_to_freeze: [
-                    'cls_token',
-                    'pos_embed',
-                    'patch_embed',
-                    'blocks',
-                    'norm',
+                    #'cls_token',
+                    #'pos_embed',
+                    #'patch_embed',
+                    #'blocks',
+                    #'norm',
                     #'jigsaw_head',
                     #'coloring_decoder',
                     #'class_head',
