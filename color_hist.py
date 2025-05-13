@@ -44,7 +44,14 @@ def compute_ab_histogram(ab_bin_indices, num_bins=20):
 
     return hist
 
-def main():
+def get_weight_matrix(W, Q):
+
+    U = 1.0 / (0.5 * W + 0.5 / Q)
+    Z = np.sum(W * U)
+    N = U / Z
+    return N
+
+def main(weights_path = None):
     lossdir = 'lossweights'
     if not os.path.exists(lossdir):
         os.makedirs(lossdir)
@@ -61,20 +68,29 @@ def main():
     num_bins = 20
     bin_size = interval_size / num_bins
 
-    global_hist = torch.zeros((20, 20), dtype=torch.float32)
-    for img,label in dl:
-        ab = label.ab_channels
-        ab_bins = quantize_ab_channels(ab, bin_size=bin_size, vmin=l, vmax=u)
+    if weights_path is None:
+        global_hist = torch.zeros((20, 20), dtype=torch.float32)
+        for img,label in dl:
+            ab = label.ab_channels
+            ab_bins = quantize_ab_channels(ab, bin_size=bin_size, vmin=l, vmax=u)
+            
+            hist = compute_ab_histogram(ab_bins, num_bins=num_bins)
+            global_hist += hist
+
+        global_hist_np = global_hist.cpu().numpy()
+        smoothed_np = gaussian_filter(global_hist_np, sigma=5.0)  # Try sigma=1.0 or 2.0
+
+        np.save(os.path.join(lossdir, 'hist.npy'), global_hist_np)
+        np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
+
+    else:
+        global_hist_np = np.load(weights_path)
+    
+    p = global_hist_np/np.sum(global_hist_np) #normalize
+    p_tilde = gaussian_filter(p, sigma=5.0)
+    Q = np.count_nonzero(global_hist_np)
+    w = get_weight_matrix(p_tilde, Q)
+    np.save(os.path.join(lossdir, 'weights.npy'), w)
         
-        hist = compute_ab_histogram(ab_bins, num_bins=num_bins)
-        global_hist += hist
-
-    global_hist_np = global_hist.cpu().numpy()
-    smoothed_np = gaussian_filter(global_hist_np, sigma=1.0)  # Try sigma=1.0 or 2.0
-
-    np.save(os.path.join(lossdir, 'hist.npy'), global_hist_np)
-    np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
-
-
 if __name__ == "__main__":
-    main()
+    main('lossweights/hist.npy')
