@@ -19,3 +19,4 @@
 - Add argparse/yaml ✅
 - add method 'reconstruction' or 'sequential' to switch modes
 - IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head
+- implement the choice of jigsaw predicitons

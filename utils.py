@@ -348,7 +348,7 @@ def freeze_components(model, component_names, freeze=True, verbose=False):
     # Report results
     if verbose:
         print('=' * 100)
-        print(f'{'FREEZING' if freeze else 'UNFREEZING'} LAYERS')
+        print(f"{'FREEZING' if freeze else 'UNFREEZING'} LAYERS")
         for name in component_names:
             if name in found:
                 print(f"{'Froze' if freeze else 'Unfroze'} '{name}'")
