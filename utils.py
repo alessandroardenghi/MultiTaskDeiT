@@ -439,17 +439,3 @@ def load_partial_checkpoint(model, checkpoint_path, verbose=False):
         print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
         print('='*100)
         
-class HuberLoss(nn.Module):
-    def __init__(self, delta=.01):
-        super(HuberLoss, self).__init__()
-        self.delta = delta
-
-    def __call__(self, input, target):
-        mask = torch.zeros_like(input)
-        mann = torch.abs(input - target)
-        eucl = .5 * (mann**2)
-        mask[...] = mann < self.delta
-
-        # loss = eucl * mask + self.delta * (mann - .5 * self.delta) * (1 - mask)
-        loss = eucl * mask / self.delta + (mann - .5 * self.delta) * (1 - mask)
-        return torch.sum(loss, dim=-1, keepdim=False).mean()
