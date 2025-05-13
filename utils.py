@@ -246,10 +246,8 @@ class JigsawAccuracy:
     def update(self, pred, gt):
         """
         Args:
-            pred: (B, P, C_pos) torch.Tensor
-            rotation_logits: (B, P, C_rot) torch.Tensor
-            true_positions: (B, P) torch.Tensor
-            true_rotations: (B, P) torch.Tensor
+            pred: Tensor of shape (B, P, C) — logits per row
+            gt: Tensor of shape (B, P) — ground truth labels
         """
         B, P, _ = pred.shape
         total = B * P
@@ -439,3 +437,37 @@ def load_partial_checkpoint(model, checkpoint_path, verbose=False):
         print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
         print('='*100)
         
+
+def jigsaw_prediction(pred):
+    """
+    pred: Tensor of shape (B, C, C) — softmax probabilities per row
+    returns: Tensor of shape (B, C) — unique predictions per row
+    """
+    softmax = torch.nn.Softmax(dim=-1)
+    pred = softmax(pred)
+    B, C, _ = pred.shape
+    device = pred.device
+    predictions = torch.full((B, C), -1, dtype=torch.long, device=device)
+    assigned = torch.zeros((B, C), dtype=torch.bool, device=device)
+
+    for i in range(C):
+        mask = assigned.unsqueeze(1).expand(-1, C, -1)  # (B, C, C)
+        masked_pred = pred.masked_fill(mask, -1) # fill of -1 the values of pred indexed by mask
+
+        # Get max per row: find index of highest value in each row
+        values, indices = masked_pred.max(dim=2)  # (B, C) each entry indices[b, c] is the column index with the maximum value in pred[b, c, :]
+
+        # For each batch, pick the row with the highest of these max values
+        _, row_indices = values.max(dim=1)  # (B,), (B,) each entry row_indices[b] is the index c 
+                                            # of the row in batch b that had the highest max value 
+                                            # (most confident prediction among rows that haven’t been used yet)
+        col_indices = indices[torch.arange(B), row_indices]  # (B,)
+
+        # Store predictions: batch b, row r → col
+        predictions[torch.arange(B), row_indices] = col_indices
+        # Update assigned columns
+        assigned[torch.arange(B), col_indices] = True
+        # Mask out the selected row so it won't be picked again
+        pred[torch.arange(B), row_indices, :] = -1
+
+    return predictions

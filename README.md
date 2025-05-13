@@ -14,9 +14,9 @@
 - parallelize training
 - logger during training: mlflow.start_run ✅
 - better models saving layout ✅
-- save some images for the coloring accuracy
+- save some images for the coloring accuracy ✅
 - Write reconstruction function 
 - Add argparse/yaml ✅
 - add method 'reconstruction' or 'sequential' to switch modes
-- IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head
-- implement the choice of jigsaw predicitons
+- IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head ✅
+- implement the choice of jigsaw predicitons ✅
