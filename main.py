@@ -12,7 +12,7 @@ from munch import Munch
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, HuberLoss
+from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
 from timm import create_model
 from logger import TrainingLogger
 
@@ -36,6 +36,12 @@ def main():
     do_coloring = 'coloring' in active_heads
     do_classification = 'classification' in active_heads
     do_jigsaw = 'jigsaw' in active_heads
+    
+    if cfg.weights != '':
+        weights = torch.from_numpy(np.load(cfg.weights))
+    else:
+        weights = None
+    
     
     model = create_model(cfg.model_name, 
                          do_jigsaw = do_jigsaw, 
@@ -62,23 +68,39 @@ def main():
     #print(model)
     assert (cfg.img_size / 16) % cfg.jigsaw_patches == 0
     
-    train_dataset = MultiTaskDataset(cfg.data_path, split='train', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches, do_rotate=True)
-    val_dataset = MultiTaskDataset(cfg.data_path, split='val', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches, do_rotate=True)
+    train_dataset = MultiTaskDataset(cfg.data_path, 
+                                     split='train', 
+                                     img_size = cfg.img_size, 
+                                     num_patches=cfg.jigsaw_patches, 
+                                     do_rotate=True,
+                                     do_jigsaw=do_jigsaw,
+                                     do_coloring=do_coloring,
+                                     do_classification=do_classification,
+                                     weights=weights)
+    
+    val_dataset = MultiTaskDataset(cfg.data_path, 
+                                    split='val', 
+                                    img_size = cfg.img_size, 
+                                    num_patches=cfg.jigsaw_patches, 
+                                    do_rotate=True,
+                                    do_jigsaw=do_jigsaw,
+                                    do_coloring=do_coloring,
+                                    do_classification=do_classification,
+                                    weights=weights)
 
     train_dataloader = DataLoader(train_dataset, 
                                   batch_size=cfg.batch_size, 
                                   shuffle=True,
-                                  num_workers=32)
+                                  num_workers=cfg.n_workers)
     
     val_dataloader = DataLoader(val_dataset, 
                                 batch_size=cfg.batch_size, 
                                 shuffle=False,
-                                num_workers=32)
+                                num_workers=cfg.n_workers)
     criterion = Munch(
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
         coloring=nn.MSELoss()
-        #coloring=HuberLoss()
     )
 
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)

@@ -74,8 +74,6 @@ def train_one_epoch(
         
         images = move_to_device(images, device)
         labels = move_to_device(labels, device)
-        print(f"Model is on device: {next(model.parameters()).device}")
-        print(device)
         
         
         # Forward and losses calculation
@@ -87,13 +85,16 @@ def train_one_epoch(
         # print(f'OUTPUTS ROT VEC JIGSAW: {outputs.rot_vector.device}')
         
         losses = torch.zeros(3).to(device)
+        B = 0
         
         if 'classification' in active_heads:
+            B = images.image_classification.shape[0]
             class_loss = criterion.classification(outputs.pred_cls, labels.label_classification)
             loss_m_classification.update(class_loss.item(), images.image_classification.shape[0])
             losses[0] = class_loss
         
         if 'coloring' in active_heads:
+            B = images.image_colorization.shape[0]
             coloring_loss = criterion.coloring(outputs.pred_coloring, labels.ab_channels)
             loss_m_coloring.update(coloring_loss.item(), images.image_colorization.shape[0])
             losses[1] = coloring_loss
@@ -113,9 +114,11 @@ def train_one_epoch(
             loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
             losses[2] = jigsaw_loss
 
+        assert B != 0
+        
         # Combine losses
         loss = combine_losses(losses, active_heads) ##TODO: write combine_losses function
-        loss_m.update(loss.item(), images.image_classification.shape[0])
+        loss_m.update(loss.item(), B)
 
         # Backward
         optimizer.zero_grad()
@@ -206,12 +209,15 @@ def validate(
             outputs = model(images)
 
             losses = torch.zeros(3).to(device)
+            B = 0
             if 'classification' in active_heads:
+                B = images.image_classification.shape[0]
                 class_loss = criterion.classification(outputs.pred_cls, labels.label_classification)
                 loss_m_classification.update(class_loss.item(), images.image_classification.shape[0])
                 losses[0] = class_loss
             
             if 'coloring' in active_heads:
+                B = images.image_coloring.shape[0]
                 coloring_loss = criterion.coloring(outputs.pred_coloring, labels.ab_channels)
                 loss_m_coloring.update(coloring_loss.item(), images.image_colorization.shape[0])
                 losses[1] = coloring_loss
@@ -230,10 +236,11 @@ def validate(
                                 0.5 * criterion.jigsaw(pred_rot, rot_vector)
                 loss_m_jigsaw.update(jigsaw_loss.item(), images.image_jigsaw.shape[0])
                 losses[2] = jigsaw_loss
-
+            
+            assert B != 0
             # Combine losses
             loss = combine_losses(losses, active_heads)
-            loss_m.update(loss.item(), images.image_classification.shape[0])
+            loss_m.update(loss.item(), B)
 
             # Metrics
             if 'classification' in active_heads:

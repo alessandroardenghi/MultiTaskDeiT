@@ -9,6 +9,26 @@ from munch import Munch
 import cv2
 import numpy as np
 
+def quantize_ab_channels(ab_tensor, bin_size=0.1, vmin=-1.0, vmax=1.0):
+    """
+    Quantize ab channels into discrete bins.
+
+    Args:
+        ab_tensor: (B, 2, H, W) tensor with values in [-1, 1]
+        bin_size: Size of each bin (e.g., 0.1)
+        vmin: Minimum value in the range
+        vmax: Maximum value in the range
+
+    Returns:
+        bin_indices: (B, 2, H, W) LongTensor with bin indices
+    """
+    num_bins = int((vmax - vmin) / bin_size)
+    ab_clamped = ab_tensor.clamp(min=vmin, max=vmax - 1e-6)  # ensure max value fits in last bin
+
+    # Shift and scale to get bin index
+    bin_indices = ((ab_clamped - vmin) / bin_size).floor().long()
+
+    return bin_indices
 
 
 
@@ -112,10 +132,24 @@ def jigsaw_single(x: torch.Tensor, n: int, do_rotate=False):
 
 class MultiTaskDataset(Dataset):
     
-    def __init__(self, data_dir, img_size = 224, split='train', transform_classification=None, num_patches = 14, do_rotate=False):
+    def __init__(self, 
+                 data_dir, 
+                 img_size = 224, 
+                 split='train', 
+                 num_patches = 14, 
+                 do_jigsaw = False,
+                 do_coloring = False,
+                 do_classification = False,
+                 do_rotate=False, 
+                 weights=None):
+        
         if split not in ['train', 'val', 'test']:
             raise Exception('Split must be chosen between train, test and val.')
         
+        self.weights = weights
+        self.do_coloring = do_coloring
+        self.do_classification = do_classification
+        self.do_jigsaw = do_jigsaw
         self.img_size = img_size
         self.do_rotate=do_rotate
         self.image_dir = os.path.join(data_dir, 'images')
@@ -125,7 +159,6 @@ class MultiTaskDataset(Dataset):
 
         with open(os.path.join(data_dir, split + '.txt'), 'r') as f:
             self.image_files = [line.strip() for line in f.readlines()]
-        self.transform_classification = transform_classification if transform_classification is not None else transforms.ToTensor()
 
     def __len__(self):
         return len(self.image_files)
@@ -137,26 +170,42 @@ class MultiTaskDataset(Dataset):
 
         image = Image.open(image_path).convert('RGB')
         image = image.resize((self.img_size, self.img_size))
+        images = Munch()
+        labels = Munch()
         
-        #image_classification = self.transform_classification(image)
-    
-        image_colorization, ab_channels = preprocess_for_coloring(image)
-        #image_classification = image_colorization.clone()
-        image_jigsaw, pos_vec, rot_vec = jigsaw_single(image_colorization, n = self.num_patches, do_rotate=self.do_rotate)
-        #image_jigsaw, pos_vec, rot_vec = image_colorization.clone(), image_colorization.clone(), image_colorization.clone()
-    
-        if image_name not in self.labels_dict.keys():
-            raise Exception('LABEL NOT FOUND')
             
-        label_classification = self.labels_dict[image_name]
-        label_classification = torch.tensor(label_classification, dtype=torch.float32)
+        image_grayscale, ab_channels = preprocess_for_coloring(image)
         
-        images = Munch(image_classification=image_colorization,
-                        image_colorization=image_colorization,
-                        image_jigsaw=image_jigsaw)
-        labels = Munch(label_classification=label_classification,
-                        ab_channels=ab_channels,
-                        pos_vec=pos_vec,
-                        rot_vec=rot_vec)
+        if self.do_jigsaw:
+            image_jigsaw, pos_vec, rot_vec = jigsaw_single(image_grayscale, n = self.num_patches, do_rotate=self.do_rotate)
+            images.image_jigsaw = image_jigsaw
+            labels.poc_vec = pos_vec
+            labels.rot_vec = rot_vec
+        
+            
+        if self.do_classification:
+            if image_name not in self.labels_dict.keys():
+                raise Exception('LABEL NOT FOUND')
+            
+            label_classification = self.labels_dict[image_name]
+            label_classification = torch.tensor(label_classification, dtype=torch.float32)
+            images.image_classification = image_grayscale
+            labels.label_classification = label_classification
+        
+        
+        if self.do_coloring:
+            
+            images.image_colorization = image_grayscale
+            labels.ab_channels = ab_channels
+            
+            
+            if self.weights is not None:
+                idxs = quantize_ab_channels(ab_channels)
+                a_idx = idxs[0]    # shape (H, W)
+                b_idx = idxs[1]    # shape (H, W)
+
+                weight_tensor = self.weights[a_idx, b_idx]    # shape: (H, W)
+                weight_tensor = weight_tensor.unsqueeze(0)
+                labels.weight_tensor = weight_tensor
 
         return images, labels

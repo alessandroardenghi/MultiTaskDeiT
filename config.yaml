@@ -2,24 +2,26 @@ model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
 jigsaw_patches: 7
 active_heads: [
-                #'coloring', 
+                'coloring', 
                 #'classification', 
-                'jigsaw'
+                #'jigsaw'
                 ]
-pixel_shuffle: False
+pixel_shuffle: True
 verbose: False
 pretrained_backbone: True
 img_size: 224
 batch_size: 32
 epochs: 50
+weights: 'lossweights/weights.npy'
+n_workers: 0
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
 modules_to_freeze: [
-                    #'cls_token',
-                    #'pos_embed',
-                    #'patch_embed',
-                    #'blocks',
-                    #'norm',
+                    'cls_token',
+                    'pos_embed',
+                    'patch_embed',
+                    'blocks',
+                    'norm',
                     #'jigsaw_head',
                     #'coloring_decoder',
                     #'class_head',
