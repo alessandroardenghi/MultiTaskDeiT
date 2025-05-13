@@ -205,7 +205,7 @@ class MultiTaskDataset(Dataset):
                 b_idx = idxs[1]    # shape (H, W)
 
                 weight_tensor = self.weights[a_idx, b_idx]    # shape: (H, W)
-                weight_tensor = weight_tensor.unsqueeze(0)
+                #weight_tensor = weight_tensor.unsqueeze(0)
                 labels.weight_tensor = weight_tensor
 
         return images, labels

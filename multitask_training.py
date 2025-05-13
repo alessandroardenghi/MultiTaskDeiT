@@ -220,7 +220,7 @@ def validate(
                 losses[0] = class_loss
             
             if 'coloring' in active_heads:
-                B = images.image_coloring.shape[0]
+                B = images.image_colorization.shape[0]
                 if criterion.coloring.__class__.__name__ in ['WeightedMSELoss', 'WeightedL1Loss']:
                     coloring_loss = criterion.coloring(outputs.pred_coloring, labels.ab_channels, labels.weight_tensor)
                 else:
