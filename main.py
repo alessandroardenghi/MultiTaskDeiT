@@ -62,8 +62,8 @@ def main():
     #print(model)
     assert (cfg.img_size / 16) % cfg.jigsaw_patches == 0
     
-    train_dataset = MultiTaskDataset(cfg.data_path, split='train', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches)
-    val_dataset = MultiTaskDataset(cfg.data_path, split='val', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches)
+    train_dataset = MultiTaskDataset(cfg.data_path, split='train', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches, do_rotate=True)
+    val_dataset = MultiTaskDataset(cfg.data_path, split='val', img_size = cfg.img_size, num_patches=cfg.jigsaw_patches, do_rotate=True)
 
     train_dataloader = DataLoader(train_dataset, 
                                   batch_size=cfg.batch_size, 
