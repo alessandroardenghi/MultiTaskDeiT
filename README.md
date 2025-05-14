@@ -39,3 +39,31 @@ LOW:
 - clean utils
 OPTIONAL :
 -  create the noise head.
+
+
+RUNS:
+1. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle
+1. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle
+1. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle
+1. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring pixelshuffle
+
+2. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle 2 steps
+2. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle 2 steps
+2. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle 2 steps
+2. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring pixelshuffle 2 steps
+
+3. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring upsampling
+3. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring upsampling
+3. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring upsampling
+3. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring upsampling
+
+4. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, jigsaw class tokens
+4. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, jigsaw class tokens
+
+5. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, jigsaw classic head
+5. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, jigsaw classic head
+
+6. ViT Tiny, patch 16, img size 240/384, augmentation, frozen backbone, classification
+6. ViT Tiny, patch 16, img size 240/384, augmentation, unfrozen backbone, classification
+
+7. best heads -> multitask training
