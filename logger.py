@@ -60,16 +60,17 @@ class TrainingLogger:
     def _setup_logger(self):
         self.logger = logging.getLogger(self.experiment_name)
         self.logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        # File handler
+        # File formatter with full info
+        file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         file_handler = logging.FileHandler(os.path.join(self.log_dir, "training.log"))
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(file_formatter)
         self.logger.addHandler(file_handler)
 
-        # Console handler
+        # Console formatter: only show the message
+        console_formatter = logging.Formatter("%(message)s")
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
+        console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
 
     def log(self, message, level="info"):
