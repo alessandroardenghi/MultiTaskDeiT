@@ -260,10 +260,10 @@ class JigsawAccuracy:
 
         # Top-n accuracy
         if self.n > 1:
-            sorted = pred.argsort(dim=-1, descending=True)
-            topn_pred = sorted[:, :, :self.n]
+            sort = pred.argsort(dim=-1, descending=True)
+            topn_pred = sort[:, :, :self.n]
             match = (topn_pred == gt.unsqueeze(-1)).any(dim=-1)
-            self.top_n += match.sum()
+            self.top_n += match.sum().item()
 
 
     def get_scores(self):

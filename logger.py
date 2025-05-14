@@ -44,7 +44,9 @@ class TrainingLogger:
     
     def __init__(self, save_step=15, base_log_dir="logs", experiment_name=None):
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-        self.experiment_name = experiment_name or f"run_{self.timestamp}"
+        self.experiment_name = f"{experiment_name}_{self.timestamp}" \
+                                if experiment_name \
+                                else f"run_{self.timestamp}"
 
         self.log_dir = os.path.join(base_log_dir, self.experiment_name)
         self.checkpoint_dir = os.path.join(self.log_dir, "checkpoints")

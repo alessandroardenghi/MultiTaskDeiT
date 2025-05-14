@@ -18,7 +18,7 @@ class MultiTaskDeiT(VisionTransformer):
                  do_coloring, 
                  do_classification, 
                  n_jigsaw_patches, 
-                 pixel_shuffle=False,
+                 pixel_shuffle_cfg,
                  verbose = False,
                  *args, 
                  **kwargs):
@@ -43,10 +43,14 @@ class MultiTaskDeiT(VisionTransformer):
             self.rot_head = JigsawRotationHead(embed_dim=self.embed_dim)
             
             
-        if self.do_coloring and not pixel_shuffle:
+        if self.do_coloring and not pixel_shuffle_cfg.do:
             self.coloring_decoder = ColorizationDecoder(embed_dim=self.embed_dim)
-        if self.do_coloring and pixel_shuffle:
-            self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, upscale_factor=16, out_channels=2)
+        if self.do_coloring and pixel_shuffle_cfg.do:
+            self.coloring_decoder = ColorizationDecoderPixelShuffle(embed_dim=self.embed_dim, 
+                                                                    total_upscale_factor=self.patch_embed.patch_size[0], 
+                                                                    out_channels=2,
+                                                                    smoothing=pixel_shuffle_cfg.smoothing,
+                                                                    upscale_steps = pixel_shuffle_cfg.steps)
             
         if self.do_classification:
             self.class_head = torch.nn.Linear(self.head.in_features, n_classes)  
@@ -64,7 +68,12 @@ class MultiTaskDeiT(VisionTransformer):
             if self.do_jigsaw:
                 print(f'Number of Jigsaw Patches per side: {self.n_jigsaw_patches}')
                 print(f'Number of ViT patches per Jigsaw Patch: {self.per_jigsaw_patches}')
-                
+            if self.do_coloring:
+                print(f'Pixel Shuffle Active: {pixel_shuffle_cfg.do}')
+                if pixel_shuffle_cfg.do:
+                    print(f'Pixel Shuffle Smoothing Active: {pixel_shuffle_cfg.smoothing}')
+                    print(f'Pixel Shuffle Upsampling Steps: {pixel_shuffle_cfg.steps}')
+                                    
     def forward_jigsaw(self, x):
         
         x = self.patch_embed(x)

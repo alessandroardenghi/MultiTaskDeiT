@@ -30,7 +30,7 @@ def load_config(path):
 def main():
     
     cfg = load_config('config.yaml')        # cfg dict with all attributes inside
-    logger = TrainingLogger()
+    logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config.yaml')
 
     
@@ -47,7 +47,7 @@ def main():
                          do_classification = cfg.active_heads.classification, 
                          do_coloring = cfg.active_heads.coloring, 
                          n_jigsaw_patches = cfg.jigsaw_patches,
-                         pixel_shuffle = cfg.pixel_shuffle,
+                         pixel_shuffle_cfg = cfg.pixel_shuffle_cfg,
                          verbose = cfg.verbose,
                          pretrained_model_info = cfg.pretrained_info) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
     
