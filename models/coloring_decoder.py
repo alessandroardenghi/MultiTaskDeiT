@@ -24,42 +24,97 @@ class ColorizationDecoder(nn.Module):
         return self.decoder(x)
     
     
-# x = rearrange(x, 'b (p1 p2) c -> b c p1 p2', p1=self.window_size, p2=self.window_size)
-#         x = self.head(x)
-#         x = rearrange(x, 'b c p1 p2 -> b (p1 p2) c')
-class ColorizationDecoderPixelShuffle(nn.Module):
-    def __init__(self, embed_dim=384, upscale_factor=16, out_channels=2):
-        super().__init__()
-        # Stabilizing projection: linearly map embed_dim -> out_channels * r^2
-        self.proj = nn.Conv2d(
-            in_channels=embed_dim,
-            out_channels=out_channels * (upscale_factor ** 2),
-            kernel_size=3,
-            padding=1,
-            stride=1,
-            padding_mode='reflect'
-        )
-        # PixelShuffle for sub-pixel upsampling
-        self.pixel_shuffle = nn.PixelShuffle(upscale_factor=upscale_factor)
-        # # Optional smoothing conv after shuffle (can help reduce artifacts)
-        # self.smooth = nn.Conv2d(
-        #     in_channels=out_channels,
-        #     out_channels=out_channels,
-        #     kernel_size=3,
-        #     padding=1,
-        #     bias=True
-        # )
-        self.activation = nn.Tanh()  # or nn.Tanh() / identity, depending on range
 
+class ColorizationDecoderPixelShuffle(nn.Module):
+    def __init__(self, embed_dim=384, total_upscale_factor=16, upscale_steps = 1, out_channels=2, smoothing=False):
+        super().__init__()
+
+        self.smoothing = smoothing
+        
+        if upscale_steps > 2:
+            raise Exception('Max 2 upscale steps')
+        
+        if upscale_steps == 2:
+            if total_upscale_factor == 16:
+                self.upscale_step1 = 4
+                self.upscale_step2 = 4
+            elif total_upscale_factor == 8:
+                self.upscale_step1 = 2
+                self.upscale_step2 = 4
+            else:
+                raise Exception('Upscale factor not supported')
+        
+        
+        self.upscale_steps = upscale_steps
+        
+        if upscale_steps == 1:
+            self.proj_full = nn.Conv2d(
+                in_channels=embed_dim,
+                out_channels=out_channels * (total_upscale_factor ** 2),
+                kernel_size=3,
+                padding=1,
+                stride=1,
+                padding_mode='reflect'
+            )
+            
+            self.pixel_shuffle_full = nn.PixelShuffle(upscale_factor=total_upscale_factor)
+        
+        elif upscale_steps == 2:
+            
+            self.proj1 = nn.Conv2d(
+                in_channels=embed_dim,
+                out_channels=out_channels * (self.upscale_step1 ** 2),
+                kernel_size=3,
+                padding=1,
+                stride=1,
+                padding_mode='reflect'
+            )
+            
+            self.pixel_shuffle1 = nn.PixelShuffle(upscale_factor=self.upscale_step1)
+            
+            self.proj2 = nn.Conv2d(
+                in_channels=out_channels,
+                out_channels=out_channels * (self.upscale_step2 ** 2),
+                kernel_size=3,
+                padding=1,
+                stride=1,
+                padding_mode='reflect'
+            )
+            self.pixel_shuffle2 = nn.PixelShuffle(upscale_factor=self.upscale_step2)
+
+        else:
+            raise Exception('At most 2 upscale steps')
+        
+        self.smooth = nn.Conv2d(
+                in_channels=out_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                padding=1,
+                bias=True
+        )
+        self.activation = nn.Tanh()
+        
+        
     def forward(self, x):
         B, N, C = x.shape
         H = W = int(N ** 0.5)
-        # reshape to (B, C, H, W)
+
         x = x.permute(0, 2, 1).contiguous().view(B, C, H, W)
 
         # project to sub-pixel channels
-        x = self.proj(x)              # (B, out_channels*r^2, H, W)
-        x = self.activation(x)
-        x = self.pixel_shuffle(x)      # (B, out_channels, H*r, W*r)
-        #x = self.smooth(x)             # optional smoothing
+        if self.upscale_steps == 1:
+            x = self.proj_full(x)              
+            x = self.activation(x)
+            x = self.pixel_shuffle_full(x)      
+            
+        elif self.upscale_steps == 2:
+            x = self.proj1(x)    
+            x = self.activation(x)
+            x = self.pixel_shuffle1(x)  
+            x = self.proj2(x)   
+            x = self.activation(x) 
+            x = self.pixel_shuffle2(x)         
+        
+        if self.smoothing:
+            x = self.smooth(x)            
         return x

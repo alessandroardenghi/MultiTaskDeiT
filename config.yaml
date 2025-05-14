@@ -1,9 +1,9 @@
-model_name: 'MultiTaskDeiT_tiny'
+model_name: 'MultiTaskDeiT_patch16_tiny'
 data_path: 'data'
 jigsaw_patches: 2
 pixel_shuffle: False
 verbose: true
-img_size: 512
+img_size: 224
 batch_size: 32
 epochs: 50
 weights: 'lossweights/weights.npy'
@@ -12,14 +12,18 @@ n_workers: 0
 
 active_heads:
     coloring: true
-    classification: true
-    jigsaw: true
+    classification: false
+    jigsaw: false
 
 pretrained_info:
     checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
     link: 'deit_tiny_patch16_224'
 
 
+pixel_shuffle_cfg:
+    do: true
+    steps: 1
+    smoothing: false
 
 freeze_modules:
     cls_token: true
