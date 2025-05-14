@@ -48,14 +48,8 @@ class MultiTaskDeiT(VisionTransformer):
                 
                 self.jigsaw_tokens =  nn.Parameter(torch.zeros(1, self.M, self.embed_dim))   # build the jigsaw tokens
                 nn.init.trunc_normal_(self.jigsaw_tokens, std=.02) 
-                new_pos_embed = nn.Parameter(torch.zeros(1, 1 + self.M + self.num_patches, self.embed_dim))
-                with torch.no_grad():
-                    new_pos_embed[:, :1, :] = self.pos_embed[:, :1, :]
-                    new_pos_embed[:, 1+self.M:, :] = self.pos_embed[:, 1:, :]
-                    # pos embeddings 1, 2, ..., num_jigsaw_patches - 1 are the jigsaw positional embeddings now
-                    
-                nn.init.trunc_normal_(new_pos_embed[:, 1:1+self.M, :], std=.02)
-                self.pos_embed = new_pos_embed
+                self.jigsaw_pos_embed = nn.Parameter(torch.zeros(1, self.M, self.embed_dim))
+                nn.init.trunc_normal_(self.jigsaw_pos_embed, std=.02)
                 
 
             else:
@@ -89,6 +83,7 @@ class MultiTaskDeiT(VisionTransformer):
                 print(f'Number of Jigsaw Patches per side: {self.n_jigsaw_patches}')
                 print(f'Number of ViT patches per Jigsaw Patch: {self.per_jigsaw_patches}')
                 print(f'Positional Embeddings shape: {self.pos_embed.shape}')
+                print(f'Positional Embeddings shape: {self.jigsaw_pos_embed.shape}')
                 print(f'Using jigsaw cls tokens: {jigsaw_cfg.use_cls_embeds}')
             if self.do_coloring:
                 print(f'Pixel Shuffle Active: {pixel_shuffle_cfg.do}')
@@ -101,10 +96,17 @@ class MultiTaskDeiT(VisionTransformer):
         x = self.patch_embed(x)
         
         if self.use_cls_embeds:
-            cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
-            jigsaw_tokens = self.jigsaw_tokens.expand(x.shape[0], -1, -1)
+            
+            x = x + self.pos_embed[:, 1:, :]       # add patch pos embeddings
+            cls_token = self.cls_token + self.pos_embed[:, :1, :]
+            cls_tokens = cls_token.expand(x.shape[0], -1, -1)
+            
+            jigsaw_tokens = self.jigsaw_tokens + self.jigsaw_pos_embed
+            jigsaw_tokens = jigsaw_tokens.expand(x.shape[0], -1, -1)
+            
+            
             x = torch.cat((cls_tokens, jigsaw_tokens, x), dim=1)
-            x = x + self.pos_embed
+            
             x = self.pos_drop(x)
             x = self.blocks(x)
             x = self.norm(x)
