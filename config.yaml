@@ -13,7 +13,7 @@ img_size: 224
 batch_size: 32
 epochs: 50
 weights: 'lossweights/weights.npy'
-n_workers: 32
+n_workers: 0
      
 ## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
 modules_to_freeze: [
@@ -39,7 +39,7 @@ modules_to_unfreeze: [
                     #'class_head',
                     ]
 
-pretrained_checkpoint: 'logs/run_20250513_1517/checkpoints/best_model.pth'
+pretrained_checkpoint: ''
 
 
 

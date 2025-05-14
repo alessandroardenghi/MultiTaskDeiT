@@ -119,8 +119,6 @@ def main():
     # recolor_images(data_path='data', output_dir='coloring_test', split='val', model=model, n_images=16, shuffle=True)
     # return
     ###### testtttttt #######
-    recolor_images(data_path='data', output_dir='coloring_test5', split='val', model=model, n_images=100, shuffle=True)
-    return
 
 
     #print(f"Training with active heads: {' '.join(active_heads)}")
