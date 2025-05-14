@@ -5,7 +5,7 @@ import torch.optim as optim
 class WeightedMSELoss(nn.Module):
     def __init__(self, reduction='mean'):
         super().__init__()
-        self.reduction=reduction
+        self.reduction = reduction
 
     def forward(self, input, target, weight):
         """
@@ -14,7 +14,6 @@ class WeightedMSELoss(nn.Module):
             input (torch.Tensor): Predicted values.
             target (torch.Tensor): Target values.
             weight (torch.Tensor): Weights for each element.
-            reduction (str): Reduction method ('mean', 'sum').
         Shapes: 
             input: (B, 2, image_size, image_size)
             target: (B, 2, image_size, image_size)
@@ -44,7 +43,6 @@ class WeightedL1Loss(nn.Module):
             input (torch.Tensor): Predicted values.
             target (torch.Tensor): Target values.
             weight (torch.Tensor): Weights for each element.
-            reduction (str): Reduction method ('mean', 'sum').
         Shapes: 
             input: (B, 2, image_size, image_size)
             target: (B, 2, image_size, image_size)
