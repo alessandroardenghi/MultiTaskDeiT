@@ -9,14 +9,24 @@
 - bug in err/debug_5490.err ✅
 - bug in err/debug_5488.err orerr/debug_5489.err ✅
 - freeze encoder or heads weights ✅
-- modify model to do only one encoder pass
-- change jigsaw patch size
-- parallelize training
+- modify model to do only one encoder pass ❌
+- parallelize training ❌
 - logger during training: mlflow.start_run ✅
 - better models saving layout ✅
 - save some images for the coloring accuracy ✅
-- Write reconstruction function 
 - Add argparse/yaml ✅
-- add method 'reconstruction' or 'sequential' to switch modes
 - IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head ✅
 - implement the choice of jigsaw predicitons ✅
+
+HIGH:
+- function to remove gray scale images
+- download coco and put in the right format
+- use images of larger size
+- change jigsaw patch size -> 3 by 3 patches
+MEDIUM:
+- do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
+- new pixel shuffle with 2 steps
+- new jigsaw head
+- write reconstruction function to rebuild jigsaw images
+OPTIONAL :
+-  create the noise head.
