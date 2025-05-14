@@ -42,13 +42,13 @@ class ColorizationDecoderPixelShuffle(nn.Module):
         # PixelShuffle for sub-pixel upsampling
         self.pixel_shuffle = nn.PixelShuffle(upscale_factor=upscale_factor)
         # # Optional smoothing conv after shuffle (can help reduce artifacts)
-        self.smooth = nn.Conv2d(
-            in_channels=out_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            padding=1,
-            bias=True
-        )
+        # self.smooth = nn.Conv2d(
+        #     in_channels=out_channels,
+        #     out_channels=out_channels,
+        #     kernel_size=3,
+        #     padding=1,
+        #     bias=True
+        # )
         self.activation = nn.Tanh()  # or nn.Tanh() / identity, depending on range
 
     def forward(self, x):
