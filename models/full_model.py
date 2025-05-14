@@ -201,11 +201,3 @@ class MultiTaskDeiT(VisionTransformer):
         lines.append(f"Total parameters (including frozen): {total_params:,}")
 
         return "\n".join(lines)
-
-
-
-
-
-
-# if __name__ == "__main__":
-#     main()
