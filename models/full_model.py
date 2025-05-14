@@ -12,16 +12,27 @@ from collections import defaultdict
 
 
 class MultiTaskDeiT(VisionTransformer):
-    def __init__(self, n_classes, do_jigsaw, do_coloring, do_classification, n_jigsaw_patches, pixel_shuffle=False, *args, **kwargs):
+    def __init__(self, 
+                 n_classes, 
+                 do_jigsaw, 
+                 do_coloring, 
+                 do_classification, 
+                 n_jigsaw_patches, 
+                 pixel_shuffle=False,
+                 verbose = False,
+                 *args, 
+                 **kwargs):
+        
         super().__init__(*args, **kwargs)
 
         self.num_patches = self.patch_embed.num_patches
         self.do_jigsaw = do_jigsaw
         self.do_coloring = do_coloring
         self.do_classification = do_classification
+        
         #self.head = None
         if self.do_jigsaw:
-            #self.jigsaw_head = JigsawHead(embed_dim=self.embed_dim, num_patches=self.num_patches)
+            
             self.n_jigsaw_patches = n_jigsaw_patches
 
             if self.num_patches % (self.n_jigsaw_patches ** 2) != 0:
@@ -39,7 +50,21 @@ class MultiTaskDeiT(VisionTransformer):
             
         if self.do_classification:
             self.class_head = torch.nn.Linear(self.head.in_features, n_classes)  
-    
+
+        if verbose:
+            print('='*100)
+            print('MODEL DESCRIPTION')
+            print(f'Active Heads:')
+            print(f'\tColoring: {self.do_coloring}')
+            print(f'\tClassification: {self.do_classification}')
+            print(f'\tJigsaw: {self.do_jigsaw}')
+            print(f'Image Size: {self.patch_embed.img_size}')
+            print(f'Number of Patches: {self.num_patches}')
+            print(f'Patch Size: {self.patch_embed.patch_size}')
+            if self.do_jigsaw:
+                print(f'Number of Jigsaw Patches per side: {self.n_jigsaw_patches}')
+                print(f'Number of ViT patches per Jigsaw Patch: {self.per_jigsaw_patches}')
+                
     def forward_jigsaw(self, x):
         
         x = self.patch_embed(x)
@@ -167,12 +192,18 @@ class MultiTaskDeiT(VisionTransformer):
                 block_param_counts[top_block] += param.numel()
                 total_trainable += param.numel()
 
-        print("Trainable parameter counts by block:\n")
+        lines = []
+        lines.append("Trainable parameter counts by block:\n")
         for block, count in block_param_counts.items():
-            print(f"{block:<20}: {count:,} parameters")
+            lines.append(f"{block:<20}: {count:,} parameters")
 
-        print(f"\nTotal trainable parameters: {total_trainable:,}")
-        print(f"Total parameters (including frozen): {total_params:,}")
+        lines.append(f"\nTotal trainable parameters: {total_trainable:,}")
+        lines.append(f"Total parameters (including frozen): {total_params:,}")
+
+        return "\n".join(lines)
+
+
+
 
 
 

@@ -293,7 +293,6 @@ def train_model(
     accuracy_fun: callable, # function to calculate classification accuracy
     logger: TrainingLogger, # logger to log the training process
     threshold: float = 0.5, # threshold for classification
-    save_path: str = None, # path to save the model
     ):
     """
     Train the model for a specified number of epochs.
@@ -317,8 +316,6 @@ def train_model(
         None
     """
 
-    if save_path is not None:
-        os.makedirs(save_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     print(f"Model is on device: {next(model.parameters()).device}")
