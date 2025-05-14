@@ -385,9 +385,9 @@ from dataset_functions.classification import MultiTaskDataset
 from torch.utils.data import DataLoader
 from PIL import Image
 
-def recolor_images(data_path, output_dir, split, model, n_images, shuffle=False):
+def recolor_images(data_path, output_dir, split, model, n_images, img_size, shuffle=False):
     os.makedirs(output_dir, exist_ok=True)
-    dataset = MultiTaskDataset(data_path, split=split)
+    dataset = MultiTaskDataset(data_path, split=split, img_size=img_size)
     loader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
     for i, (images, labels) in enumerate(loader):
         if i >= n_images:

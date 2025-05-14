@@ -8,6 +8,8 @@ coco
 coco_colors
 coco_grey
 val2014
+logs
+*.yaml
 
 __pycache__/
 *.pyc
