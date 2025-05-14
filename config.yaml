@@ -1,45 +1,47 @@
 model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
-jigsaw_patches: 7
-active_heads: [
-                'coloring', 
-                #'classification', 
-                #'jigsaw'
-                ]
+jigsaw_patches: 2
 pixel_shuffle: False
-verbose: False
-pretrained_backbone: True
-img_size: 224
+verbose: true
+img_size: 512
 batch_size: 32
 epochs: 50
 weights: 'lossweights/weights.npy'
 n_workers: 0
-     
-## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO FREEZE
-modules_to_freeze: [
-                    #'cls_token',
-                    #'pos_embed',
-                    #'patch_embed',
-                    #'blocks',
-                    #'norm',
-                    #'jigsaw_head',
-                    #'coloring_decoder',
-                    #'class_head',
-                    ]
 
-## ALL BLOCKS ARE PRESENT IN THE FOLLOWING LIST. UNCOMMENT THE ONES YOU DO NOT WANT TO UNFREEZE
-modules_to_unfreeze: [
-                    #'cls_token',
-                    #'pos_embed',
-                    #'patch_embed',
-                    #'blocks',
-                    #'norm',
-                    #'jigsaw_head',
-                    #'coloring_decoder',
-                    #'class_head',
-                    ]
 
-pretrained_checkpoint: ''
+active_heads:
+    coloring: true
+    classification: true
+    jigsaw: true
+
+pretrained_info:
+    checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: 'deit_tiny_patch16_224'
+
+
+
+freeze_modules:
+    cls_token: true
+    pos_embed: true
+    patch_embed: true
+    blocks: true
+    norm: true
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
+
+unfreeze_modules:
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
 
 
 

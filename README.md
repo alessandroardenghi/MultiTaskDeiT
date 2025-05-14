@@ -17,6 +17,9 @@
 - Add argparse/yaml ✅
 - IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head ✅
 - implement the choice of jigsaw predicitons ✅
+- use images of larger size ✅
+- change jigsaw patch size -> 3 by 3 patches ✅
+- try coloring/jigsaw with data augmentation ✅
 
 HIGH:
 - function to remove gray scale images

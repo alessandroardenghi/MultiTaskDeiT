@@ -4,6 +4,7 @@ import random
 from munch import Munch
 import os
 import torch.nn as nn
+from timm import create_model
 import cv2
 
 def jigsaw_image(image : np.array, 
@@ -437,7 +438,59 @@ def load_partial_checkpoint(model, checkpoint_path, verbose=False):
         print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
         print('='*100)
         
+def load_pretrained_weights(model, old_model_info, img_size, verbose=False):
+    
+    if old_model_info.checkpoint_type == 'torch_checkpoint':
+        checkpoint = torch.load(old_model_info.link, map_location='cpu')
+        source_state_dict = checkpoint['model_state_dict'] if 'model_state_dict' in checkpoint else checkpoint
+    
+    elif old_model_info.checkpoint_type == 'timm_name':
+        old_model = create_model(old_model_info.link, 
+                                 img_size = img_size,
+                                 pretrained=True)
+        source_state_dict = old_model.state_dict()
+    
+    else:
+        raise Exception('The provided checkpoint type is not supported')
+    
+    model_state_dict = model.state_dict()
+    
+    updated_layers = []
+    not_updated_layers = []
+    identical_layers = []
 
+    for k, v in model_state_dict.items():
+        if k in source_state_dict:
+
+            if model_state_dict[k].shape == source_state_dict[k].shape:
+                if torch.allclose(model_state_dict[k], source_state_dict[k], atol=1e-6, rtol=1e-5):
+                    identical_layers.append(k.split('.')[0])  # Extract block name
+                else:
+                    updated_layers.append(k.split('.')[0])  # Extract block name
+            else:
+                not_updated_layers.append(k.split('.')[0])  # Extract block name
+        else:
+            not_updated_layers.append(k.split('.')[0])  # Extract block name
+
+    # Update only matching layers
+    updated_state_dict = {k: v for k, v in source_state_dict.items() if k in model_state_dict and model_state_dict[k].shape == v.shape}
+    model_state_dict.update(updated_state_dict)
+    model.load_state_dict(model_state_dict) 
+    
+    # Remove duplicates from block names
+    updated_layers = list(set(updated_layers))
+    not_updated_layers = list(set(not_updated_layers))
+    identical_layers = list(set(identical_layers))
+
+    # Print results
+    if verbose:
+        print('='*100)
+        print('LAYERS UPDATED FROM LOCAL CHECKPOINT')
+        print(f"Updated blocks ({len(updated_layers)}): {updated_layers}")
+        print(f"Identical blocks ({len(identical_layers)}): {identical_layers}")
+        print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
+        print('='*100)
+        
 def jigsaw_prediction(pred):
     """
     pred: Tensor of shape (B, C, C) — softmax probabilities per row

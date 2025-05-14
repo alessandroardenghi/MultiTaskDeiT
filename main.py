@@ -23,7 +23,7 @@ from munch import Munch
 def load_config(path):
     with open(path, 'r') as f:
         cfg = yaml.safe_load(f)
-    return Munch(cfg)  
+    return Munch.fromDict(cfg)
 
 
 
@@ -32,11 +32,7 @@ def main():
     cfg = load_config('config.yaml')        # cfg dict with all attributes inside
     logger = TrainingLogger()
     logger.save_config(cfg, filename='config.yaml')
-    
-    active_heads = cfg.active_heads
-    do_coloring = 'coloring' in active_heads
-    do_classification = 'classification' in active_heads
-    do_jigsaw = 'jigsaw' in active_heads
+
     
     if cfg.weights != '':
         weights = torch.from_numpy(np.load(cfg.weights))
@@ -45,38 +41,29 @@ def main():
     
     
     model = create_model(cfg.model_name, 
-                         do_jigsaw = do_jigsaw, 
-                         do_classification = do_classification, 
-                         do_coloring = do_coloring, 
+                         img_size = cfg.img_size,
+                         do_jigsaw = cfg.active_heads.jigsaw, 
+                         pretrained = True,
+                         do_classification = cfg.active_heads.classification, 
+                         do_coloring = cfg.active_heads.coloring, 
                          n_jigsaw_patches = cfg.jigsaw_patches,
                          pixel_shuffle = cfg.pixel_shuffle,
                          verbose = cfg.verbose,
-                         pretrained = cfg.pretrained_backbone) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
+                         pretrained_model_info = cfg.pretrained_info) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
     
-    if cfg.pretrained_checkpoint:
-        load_partial_checkpoint(model, cfg.pretrained_checkpoint, cfg.verbose)
-    freeze_components(model, component_names=cfg.modules_to_freeze, freeze=True, verbose=cfg.verbose)
-    freeze_components(model, component_names=cfg.modules_to_unfreeze, freeze=False, verbose=cfg.verbose)
     
-    # transform = transforms.Compose([
-    #     transforms.Resize((224, 224)),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    # ])
-    #train_dataset = ClassificationDataset('data', split='train', transform=transform)
-    #val_dataset = ClassificationDataset('data', split='val', transform=transform)
+    freeze_components(model, component_names=[module for module, v in cfg.freeze_modules.items() if v], freeze=True, verbose=cfg.verbose)
+    freeze_components(model, component_names=[module for module, v in cfg.unfreeze_modules.items() if v], freeze=False, verbose=cfg.verbose)
     
-    #print(model)
-    assert (cfg.img_size / 16) % cfg.jigsaw_patches == 0
     
     train_dataset = MultiTaskDataset(cfg.data_path, 
                                      split='train', 
                                      img_size = cfg.img_size, 
                                      num_patches=cfg.jigsaw_patches, 
                                      do_rotate=True,
-                                     do_jigsaw=do_jigsaw,
-                                     do_coloring=do_coloring,
-                                     do_classification=do_classification,
+                                     do_jigsaw=cfg.active_heads.jigsaw,
+                                     do_coloring=cfg.active_heads.coloring,
+                                     do_classification=cfg.active_heads.classification,
                                      weights=weights,
                                      transform=True)
     
@@ -85,9 +72,9 @@ def main():
                                     img_size = cfg.img_size, 
                                     num_patches=cfg.jigsaw_patches, 
                                     do_rotate=True,
-                                    do_jigsaw=do_jigsaw,
-                                    do_coloring=do_coloring,
-                                    do_classification=do_classification,
+                                    do_jigsaw=cfg.active_heads.jigsaw,
+                                    do_coloring=cfg.active_heads.coloring,
+                                    do_classification=cfg.active_heads.classification,
                                     weights=weights, 
                                     transform=True)
 
@@ -112,9 +99,11 @@ def main():
 
 
     #print(f"Training with active heads: {' '.join(active_heads)}")
-    logger.log(f"Training with active heads: {' '.join(active_heads)}")
-    logger.log(f'\nModel Parameters: \n{model.count_params_by_block()}')
-    #print(model.count_params_by_block())
+    print('='*100)
+    logger.log(f"Training with active heads: {' '.join([head for head, v in cfg.active_heads.items() if v])}")
+    logger.log(model.count_params_by_block())
+    print('='*100)
+    
     train_model(
         model=model,
         train_dataloader=train_dataloader,
@@ -122,12 +111,11 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         num_epochs=cfg.epochs,
-        active_heads=active_heads,
+        active_heads=[head for head, v in cfg.active_heads.items() if v],
         combine_losses=combine_losses,
         accuracy_fun=hamming_acc,
         logger=logger,
-        threshold=0.5,
-        save_path='models_saved',
+        threshold=0.5
     )
 
 
