@@ -21,8 +21,8 @@
 HIGH:
 - function to remove gray scale images
 - try coloring/jigsaw with data augmentation
-- download coco and put in the right format
-- use images of larger size
+- download coco and put in the right format ✅
+- use images of larger size 
 - change jigsaw patch size -> 3 by 3 patches
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 

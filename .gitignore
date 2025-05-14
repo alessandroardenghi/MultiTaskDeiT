@@ -4,6 +4,9 @@ err
 out
 *.sh
 temp.ipynb
+coco
+coco_colors
+coco_grey
 
 __pycache__/
 *.pyc
