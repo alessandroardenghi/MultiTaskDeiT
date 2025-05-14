@@ -6,9 +6,11 @@ import torch
 from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch, reconstruct_image
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from .coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
-from .jigsaw_head import JigsawHead, JigsawPositionHead, JigsawRotationHead
+from .jigsaw_head import JigsawHead, JigsawPositionHead, JigsawRotationHead, JigsawMultiHead
 from munch import Munch
 from collections import defaultdict
+import torch.nn as nn
+
 
 
 class MultiTaskDeiT(VisionTransformer):
@@ -17,7 +19,7 @@ class MultiTaskDeiT(VisionTransformer):
                  do_jigsaw, 
                  do_coloring, 
                  do_classification, 
-                 n_jigsaw_patches, 
+                 jigsaw_cfg, 
                  pixel_shuffle_cfg,
                  verbose = False,
                  *args, 
@@ -29,18 +31,36 @@ class MultiTaskDeiT(VisionTransformer):
         self.do_jigsaw = do_jigsaw
         self.do_coloring = do_coloring
         self.do_classification = do_classification
+        self.use_cls_embeds = jigsaw_cfg.use_cls_embeds
         
-        #self.head = None
         if self.do_jigsaw:
             
-            self.n_jigsaw_patches = n_jigsaw_patches
+            self.n_jigsaw_patches = jigsaw_cfg.n_jigsaw_patches
 
             if self.num_patches % (self.n_jigsaw_patches ** 2) != 0:
                 raise Exception('JIGSAW PATCH SIZE NOT DIVISIBLE')
             self.per_jigsaw_patches = self.num_patches // (self.n_jigsaw_patches ** 2)
+            self.M = self.n_jigsaw_patches ** 2
             
-            self.pos_head = JigsawPositionHead(embed_dim=self.embed_dim, n_jigsaw_patches=self.n_jigsaw_patches)
-            self.rot_head = JigsawRotationHead(embed_dim=self.embed_dim)
+            if jigsaw_cfg.use_cls_embeds:
+                self.single_jigsaw_head = JigsawMultiHead(embed_dim=self.embed_dim,
+                                                          n_jigsaw_patches=jigsaw_cfg.n_jigsaw_patches)
+                
+                self.jigsaw_tokens =  nn.Parameter(torch.zeros(1, self.M, self.embed_dim))   # build the jigsaw tokens
+                nn.init.trunc_normal_(self.jigsaw_tokens, std=.02) 
+                new_pos_embed = nn.Parameter(torch.zeros(1, 1 + self.M + self.num_patches, self.embed_dim))
+                with torch.no_grad():
+                    new_pos_embed[:, :1, :] = self.pos_embed[:, :1, :]
+                    new_pos_embed[:, 1+self.M:, :] = self.pos_embed[:, 1:, :]
+                    # pos embeddings 1, 2, ..., num_jigsaw_patches - 1 are the jigsaw positional embeddings now
+                    
+                nn.init.trunc_normal_(new_pos_embed[:, 1:1+self.M, :], std=.02)
+                self.pos_embed = new_pos_embed
+                
+
+            else:
+                self.pos_head = JigsawPositionHead(embed_dim=self.embed_dim, n_jigsaw_patches=self.n_jigsaw_patches)
+                self.rot_head = JigsawRotationHead(embed_dim=self.embed_dim)
             
             
         if self.do_coloring and not pixel_shuffle_cfg.do:
@@ -68,6 +88,8 @@ class MultiTaskDeiT(VisionTransformer):
             if self.do_jigsaw:
                 print(f'Number of Jigsaw Patches per side: {self.n_jigsaw_patches}')
                 print(f'Number of ViT patches per Jigsaw Patch: {self.per_jigsaw_patches}')
+                print(f'Positional Embeddings shape: {self.pos_embed.shape}')
+                print(f'Using jigsaw cls tokens: {jigsaw_cfg.use_cls_embeds}')
             if self.do_coloring:
                 print(f'Pixel Shuffle Active: {pixel_shuffle_cfg.do}')
                 if pixel_shuffle_cfg.do:
@@ -77,11 +99,23 @@ class MultiTaskDeiT(VisionTransformer):
     def forward_jigsaw(self, x):
         
         x = self.patch_embed(x)
-        x = x + self.pos_embed[:, 1:, :]
-
-        # append cls token
+        
+        if self.use_cls_embeds:
+            cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+            jigsaw_tokens = self.jigsaw_tokens.expand(x.shape[0], -1, -1)
+            x = torch.cat((cls_tokens, jigsaw_tokens, x), dim=1)
+            x = x + self.pos_embed
+            x = self.pos_drop(x)
+            x = self.blocks(x)
+            x = self.norm(x)
+            pos_logits, rot_logits = self.single_jigsaw_head(x[:, 1:1+self.M, :])
+            return pos_logits, rot_logits
+        
+        
+        x = x + self.pos_embed[:, 1:, :]       # add patch pos embeddings
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
+        
         x = torch.cat((cls_tokens, x), dim=1)
 
         # apply Transformer blocks
@@ -105,7 +139,8 @@ class MultiTaskDeiT(VisionTransformer):
         cls_token = self.cls_token + self.pos_embed[:, :1, :]
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
-
+        
+        x = self.pos_drop(x)
         x = self.blocks(x)
         x = self.norm(x)
         x = self.class_head(x[:, 0])
@@ -121,6 +156,7 @@ class MultiTaskDeiT(VisionTransformer):
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
 
+        x = self.pos_drop(x)
         x = self.blocks(x)
         x = self.norm(x)
         x = x[:, 1:]  # remove cls token
