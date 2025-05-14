@@ -1,3 +1,5 @@
+experiment_name: 'coloring_task'
+
 model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
 jigsaw_patches: 2
@@ -18,7 +20,6 @@ active_heads:
 pretrained_info:
     checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
     link: 'deit_tiny_patch16_224'
-
 
 
 freeze_modules:

@@ -28,10 +28,13 @@ HIGH:
 - use images of larger size 
 - change jigsaw patch size -> 3 by 3 patches
 - scheduler learning rate
+- mix the losses
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
 - new pixel shuffle with 2 steps
 - new jigsaw head
 - write reconstruction function to rebuild jigsaw images
+LOW:
+- clean utils
 OPTIONAL :
 -  create the noise head.
