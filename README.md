@@ -29,6 +29,7 @@ HIGH:
 - change jigsaw patch size -> 3 by 3 patches ✅
 - mix the losses
 - scheduler learning rate ✅
+- compute new colorization weights ✅
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
 - new pixel shuffle with 2 steps ✅
