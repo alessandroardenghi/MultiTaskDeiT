@@ -30,7 +30,7 @@ def load_config(path):
 def main():
     
     cfg = load_config('config.yaml')        # cfg dict with all attributes inside
-    logger = TrainingLogger()
+    logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config.yaml')
 
     

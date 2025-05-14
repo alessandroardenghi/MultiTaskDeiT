@@ -1,4 +1,7 @@
 model_name: 'MultiTaskDeiT_patch16_tiny'
+experiment_name: 'coloring_task'
+
+model_name: 'MultiTaskDeiT_tiny'
 data_path: 'data'
 jigsaw_patches: 2
 pixel_shuffle: False
