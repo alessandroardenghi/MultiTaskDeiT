@@ -1,7 +1,6 @@
 model_name: 'MultiTaskDeiT_patch16_tiny'
 experiment_name: 'coloring_task'
 data_path: 'data'
-jigsaw_patches: 2
 verbose: true
 img_size: 224
 batch_size: 32
@@ -12,9 +11,9 @@ n_workers: 0
 
 
 active_heads:
-    coloring: true
+    coloring: false
     classification: false
-    jigsaw: false
+    jigsaw: true
 
 pretrained_info:
     checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
@@ -25,6 +24,10 @@ pixel_shuffle_cfg:
     do: true
     steps: 1
     smoothing: false
+
+jigsaw_cfg:
+    use_cls_embeds: true
+    n_jigsaw_patches: 7
 
 freeze_modules:
     cls_token: true

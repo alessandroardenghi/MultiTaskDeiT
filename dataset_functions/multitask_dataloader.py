@@ -205,7 +205,7 @@ class MultiTaskDataset(Dataset):
         if self.do_jigsaw:
             image_jigsaw, pos_vec, rot_vec = jigsaw_single(image_grayscale, n = self.num_patches, do_rotate=self.do_rotate)
             images.image_jigsaw = image_jigsaw
-            labels.poc_vec = pos_vec
+            labels.pos_vec = pos_vec
             labels.rot_vec = rot_vec
         
             
