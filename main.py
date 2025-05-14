@@ -77,7 +77,8 @@ def main():
                                      do_jigsaw=do_jigsaw,
                                      do_coloring=do_coloring,
                                      do_classification=do_classification,
-                                     weights=weights)
+                                     weights=weights,
+                                     transform=True)
     
     val_dataset = MultiTaskDataset(cfg.data_path, 
                                     split='val', 
@@ -87,7 +88,8 @@ def main():
                                     do_jigsaw=do_jigsaw,
                                     do_coloring=do_coloring,
                                     do_classification=do_classification,
-                                    weights=weights)
+                                    weights=weights, 
+                                    transform=True)
 
     train_dataloader = DataLoader(train_dataset, 
                                   batch_size=cfg.batch_size, 
@@ -107,18 +109,6 @@ def main():
 
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
     combine_losses = lambda x,y: x.sum()
-
-
-    ###### testtttttt #######
-    # # Load the checkpoint
-    # checkpoint_path = 'logs/run_20250510_1632/checkpoints/best_model.pth'
-    # checkpoint = torch.load(checkpoint_path, map_location='cuda')  # or 'cuda' if available
-
-    # # Restore model, optimizer, and epoch
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # recolor_images(data_path='data', output_dir='coloring_test', split='val', model=model, n_images=16, shuffle=True)
-    # return
-    ###### testtttttt #######
 
 
     #print(f"Training with active heads: {' '.join(active_heads)}")

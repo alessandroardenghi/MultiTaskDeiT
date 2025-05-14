@@ -137,6 +137,7 @@ class MultiTaskDataset(Dataset):
                  img_size = 224, 
                  split='train', 
                  num_patches = 14, 
+                 transform = True,
                  do_jigsaw = False,
                  do_coloring = False,
                  do_classification = False,
@@ -152,10 +153,29 @@ class MultiTaskDataset(Dataset):
         self.do_jigsaw = do_jigsaw
         self.img_size = img_size
         self.do_rotate=do_rotate
+        self.transform = transform
         self.image_dir = os.path.join(data_dir, 'images')
         npz_data = np.load(os.path.join(data_dir, 'labels.npz'), allow_pickle=True)
         self.labels_dict = npz_data['labels'].item()
         self.num_patches = num_patches
+        
+        if transform:
+            if split == 'train':
+                self.transform = transforms.Compose([
+                    transforms.Resize((img_size + 20, img_size + 20)),
+                    transforms.RandomCrop(img_size),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ColorJitter(brightness=0.2,   # Adjust brightness by a large amount
+                                            contrast=0.1,     # Adjust contrast for deeper darks and bright highlights
+                                            saturation=0.1,   # Increase saturation to make colors more vivid
+                                            hue=0.05),
+                    #transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
+                ])
+            else:
+                self.transform = transforms.Compose([
+                    transforms.Resize((img_size, img_size))
+                ])
+            
 
         with open(os.path.join(data_dir, split + '.txt'), 'r') as f:
             self.image_files = [line.strip() for line in f.readlines()]
@@ -169,7 +189,14 @@ class MultiTaskDataset(Dataset):
         image_path = os.path.join(self.image_dir, image_name)
 
         image = Image.open(image_path).convert('RGB')
-        image = image.resize((self.img_size, self.img_size))
+        #image = image.resize((self.img_size, self.img_size))
+        
+        if self.transform is not None:
+            image = self.transform(image)
+        else:
+            image = image.resize((self.img_size, self.img_size))
+            
+            
         images = Munch()
         labels = Munch()
         
@@ -207,5 +234,5 @@ class MultiTaskDataset(Dataset):
                 weight_tensor = self.weights[a_idx, b_idx]    # shape: (H, W)
                 #weight_tensor = weight_tensor.unsqueeze(0)
                 labels.weight_tensor = weight_tensor
-
+        images.original_image = transforms.ToTensor()(image)
         return images, labels
