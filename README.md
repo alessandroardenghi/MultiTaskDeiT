@@ -22,7 +22,7 @@
 - try coloring/jigsaw with data augmentation ✅
 
 HIGH:
-- function to remove gray scale images
+- function to remove gray scale images ✅
 - try coloring/jigsaw with data augmentation
 - download coco and put in the right format ✅
 - use images of larger size 
