@@ -16,6 +16,7 @@ from multitask_training import train_model
 from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
 from timm import create_model
 from logger import TrainingLogger
+#from torch.optim.lr_scheduler import OneCycleLR
 
 import yaml
 from munch import Munch
@@ -94,9 +95,22 @@ def main():
         coloring=WeightedL1Loss(reduction='sum')
     )
 
-    optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
-    combine_losses = lambda x,y: x.sum()
+    optimizer = optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=1e-5)
+    if cfg.freeze_modules['block']==True:
+        scheduler = None
+    else:
+        scheduler = optim.lr_scheduler.OneCycleLR(
+            optimizer,
+            max_lr=1e-4,  # or slightly higher if your head is already stable
+            steps_per_epoch=len(train_dataloader),
+            epochs=cfg.epochs,
+            pct_start=0.1,  # % of total steps to ramp up LR
+            anneal_strategy='cos',  # cosine decay
+            div_factor=25.0,  # initial LR = max_lr / div_factor
+            final_div_factor=1e4,  # end LR = max_lr / final_div_factor
+        )
 
+    combine_losses = lambda x,y: x.sum()
 
     #print(f"Training with active heads: {' '.join(active_heads)}")
     print('='*100)
@@ -110,6 +124,7 @@ def main():
         val_dataloader=val_dataloader,
         criterion=criterion,
         optimizer=optimizer,
+        scheduler=scheduler,
         num_epochs=cfg.epochs,
         active_heads=[head for head, v in cfg.active_heads.items() if v],
         combine_losses=combine_losses,

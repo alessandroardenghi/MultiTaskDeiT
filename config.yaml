@@ -6,6 +6,7 @@ verbose: true
 img_size: 224
 batch_size: 32
 epochs: 50
+lr : 1e-3 # 1e-4 when backbone unfrozen
 weights: 'lossweights/weights.npy'
 n_workers: 0
 

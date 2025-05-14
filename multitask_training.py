@@ -286,6 +286,7 @@ def train_model(
     val_dataloader: Iterable,
     criterion: Munch,
     optimizer: torch.optim.Optimizer,
+    scheduler: torch.optim.lr_scheduler._LRScheduler,
     #device: torch.device,
     num_epochs: int,
     active_heads: list, # control which heads are active
@@ -305,6 +306,7 @@ def train_model(
                             2. 'coloring': nn.MSELoss
                             3. 'jigsaw': nn.MSELoss if using a regression head otherise nn.CrossEntropyLoss 
         optimizer (torch.optim.Optimizer): Optimizer for the model.
+        scheduler (torch.optim.lr_scheduler._LRScheduler): Learning rate scheduler.
         device (torch.device): The device to use for training.
         num_epochs (int): Number of epochs to train the model.
         active_heads (Optional[list]): List of active heads to train. If None, all heads are trained.
@@ -355,6 +357,12 @@ def train_model(
                         epoch=epoch, 
                         val_loss=val_metrics.val_epoch_loss
         )
+
+        if scheduler is not None:
+            if isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
+                scheduler.step(val_metrics.val_epoch_loss)
+            else:
+                scheduler.step()
         # Print metrics
         # print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | \
         #     Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | \
