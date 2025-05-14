@@ -3,17 +3,17 @@ import torch.nn as nn
 import torch.optim as optim
 
 class WeightedMSELoss(nn.Module):
-    def __init__(self):
+    def __init__(self, reduction='mean'):
         super().__init__()
+        self.reduction = reduction
 
-    def forward(self, input, target, weight, reduction='mean'):
+    def forward(self, input, target, weight):
         """
         Compute the weighted mean squared error loss.
         Args:
             input (torch.Tensor): Predicted values.
             target (torch.Tensor): Target values.
             weight (torch.Tensor): Weights for each element.
-            reduction (str): Reduction method ('mean', 'sum').
         Shapes: 
             input: (B, 2, image_size, image_size)
             target: (B, 2, image_size, image_size)
@@ -24,9 +24,9 @@ class WeightedMSELoss(nn.Module):
         weight = weight.unsqueeze(1)           # (B, 1, image_size, image_size)
         weight = weight.expand(-1, 2, -1, -1)  # (B, 2, image_size, image_size)
         error = weight * (input - target) ** 2
-        if reduction == 'mean':
+        if self.reduction == 'mean':
             return torch.mean(error)
-        elif reduction == 'sum':
+        elif self.reduction == 'sum':
             return torch.sum(error)
         else:
             raise ValueError("Invalid reduction method. Choose 'mean' or 'sum'.")
@@ -43,7 +43,6 @@ class WeightedL1Loss(nn.Module):
             input (torch.Tensor): Predicted values.
             target (torch.Tensor): Target values.
             weight (torch.Tensor): Weights for each element.
-            reduction (str): Reduction method ('mean', 'sum').
         Shapes: 
             input: (B, 2, image_size, image_size)
             target: (B, 2, image_size, image_size)

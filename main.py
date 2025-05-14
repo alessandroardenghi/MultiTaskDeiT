@@ -92,11 +92,11 @@ def main():
         classification=nn.BCEWithLogitsLoss(),
         jigsaw=nn.CrossEntropyLoss(),
         #coloring=nn.MSELoss(),
-        coloring=WeightedL1Loss(reduction='sum')
+        coloring=WeightedMSELoss(reduction='mean')
     )
 
     optimizer = optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=1e-5)
-    if cfg.freeze_modules['block']==True:
+    if cfg.freeze_modules['blocks']==True:
         scheduler = None
     else:
         scheduler = optim.lr_scheduler.OneCycleLR(
