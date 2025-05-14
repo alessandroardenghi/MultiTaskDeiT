@@ -17,13 +17,13 @@
 - Add argparse/yaml ✅
 - IMPORTANT TO SOLVE: bug in loading the model pretrained because of self.head ✅
 - implement the choice of jigsaw predicitons ✅
-- download coco and put in the right format ✅
-- function to remove gray scale images ✅
+- use images of larger size ✅
+- change jigsaw patch size -> 3 by 3 patches ✅
+- try coloring/jigsaw with data augmentation ✅
 
 HIGH:
-- try coloring/jigsaw with data augmentation
-- use images of larger size 
-- change jigsaw patch size -> 3 by 3 patches
+- function to remove gray scale images
+- download coco and put in the right format 
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
 - new pixel shuffle with 2 steps
