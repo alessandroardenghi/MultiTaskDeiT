@@ -56,7 +56,7 @@ def main(weights_path = None):
     if not os.path.exists(lossdir):
         os.makedirs(lossdir)
 
-    df = MultiTaskDataset('data', split='train', img_size = 224, do_coloring=True, num_patches=4)
+    df = MultiTaskDataset('data', split='train', img_size = 384, do_coloring=True, num_patches=4, transform=False)
     dl = DataLoader(df, 
                     batch_size=32, 
                     shuffle=False,
@@ -80,7 +80,7 @@ def main(weights_path = None):
         global_hist_np = global_hist.cpu().numpy()
         smoothed_np = gaussian_filter(global_hist_np, sigma=3.0)  # Try sigma=1.0 or 2.0
 
-        np.save(os.path.join(lossdir, 'hist_25_bins.npy'), global_hist_np)
+        np.save(os.path.join(lossdir, 'hist_25_bins_coco.npy'), global_hist_np)
         #np.save(os.path.join(lossdir, 'smoothed_hist.npy'), smoothed_np)
 
     else:
@@ -90,7 +90,7 @@ def main(weights_path = None):
     p_tilde = gaussian_filter(p, sigma=5.0)
     Q = np.count_nonzero(global_hist_np)
     w = get_weight_matrix(p_tilde, Q)
-    np.save(os.path.join(lossdir, 'weights_25_bins_sigma_3.npy'), w)
+    np.save(os.path.join(lossdir, 'weights_25_bins_sigma_3_coco.npy'), w)
         
 if __name__ == "__main__":
     main()

@@ -159,22 +159,21 @@ class MultiTaskDataset(Dataset):
         self.labels_dict = npz_data['labels'].item()
         self.num_patches = num_patches
         
-        if transform:
-            if split == 'train':
-                self.transform = transforms.Compose([
-                    transforms.Resize((img_size + 20, img_size + 20)),
-                    transforms.RandomCrop(img_size),
-                    transforms.RandomHorizontalFlip(),
-                    transforms.ColorJitter(brightness=0.2,   # Adjust brightness by a large amount
-                                            contrast=0.1,     # Adjust contrast for deeper darks and bright highlights
-                                            saturation=0.1,   # Increase saturation to make colors more vivid
-                                            hue=0.05),
-                    #transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
-                ])
-            else:
-                self.transform = transforms.Compose([
-                    transforms.Resize((img_size, img_size))
-                ])
+        if transform and split == 'train':
+            self.transform = transforms.Compose([
+                transforms.Resize((img_size + 20, img_size + 20)),
+                transforms.RandomCrop(img_size),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.2,   # Adjust brightness by a large amount
+                                        contrast=0.1,     # Adjust contrast for deeper darks and bright highlights
+                                        saturation=0.1,   # Increase saturation to make colors more vivid
+                                        hue=0.05),
+                #transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.Resize((img_size, img_size))
+            ])
             
 
         with open(os.path.join(data_dir, split + '.txt'), 'r') as f:
