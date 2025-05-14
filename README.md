@@ -23,17 +23,17 @@
 
 HIGH:
 - function to remove gray scale images ✅
-- try coloring/jigsaw with data augmentation
+- try coloring/jigsaw with data augmentation ✅
 - download coco and put in the right format ✅
-- use images of larger size 
-- change jigsaw patch size -> 3 by 3 patches
-- scheduler learning rate
+- use images of larger size ✅
+- change jigsaw patch size -> 3 by 3 patches ✅
 - mix the losses
+- scheduler learning rate ✅
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
-- new pixel shuffle with 2 steps
-- new jigsaw head
-- write reconstruction function to rebuild jigsaw images
+- new pixel shuffle with 2 steps ✅
+- new jigsaw head ✅
+- write reconstruction function to rebuild jigsaw images 
 LOW:
 - clean utils
 OPTIONAL :

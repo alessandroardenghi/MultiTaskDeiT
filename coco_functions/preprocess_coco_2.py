@@ -9,7 +9,7 @@ from collections import defaultdict
 
 if __name__ == "__main__":
     # Paths
-    coco_dir = 'coco_colors'                                   # 'coco/images'  # Where COCO val images are currently
+    coco_dir = 'coco_colors/images'                                   # 'coco/images'  # Where COCO val images are currently
     annotations_path = 'annotations/instances_val2014.json'
     labels_file = os.path.join(coco_dir, 'labels.npz')
 

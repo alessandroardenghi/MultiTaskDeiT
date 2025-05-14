@@ -79,4 +79,4 @@ if __name__ == "__main__":
             index = cat_id_to_index[cat_id]
             image_labels[fname][index] = 1
 
-    np.savez(labels_file, labels=image_labels, classes=categories)
+    np.savez(labels_file, labels=dict(image_labels), classes=categories)
