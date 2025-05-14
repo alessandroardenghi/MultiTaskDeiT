@@ -27,6 +27,7 @@ HIGH:
 - download coco and put in the right format ✅
 - use images of larger size 
 - change jigsaw patch size -> 3 by 3 patches
+- scheduler learning rate
 MEDIUM:
 - do the sequential mode for the model and add method 'reconstruction' or 'sequential' to switch modes 
 - new pixel shuffle with 2 steps
