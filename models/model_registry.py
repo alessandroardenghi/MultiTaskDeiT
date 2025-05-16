@@ -69,6 +69,47 @@ def MultiTaskDeiT_patch16_tiny(do_jigsaw : bool,
     return model
 
 @register_model
+def MultiTaskDeiT_patch16_tiny_3_models(do_jigsaw : bool, 
+                       do_coloring : bool, 
+                       do_classification : bool, 
+                       pixel_shuffle_cfg : Munch, 
+                       jigsaw_cfg : Munch,
+                       img_size : int,
+                       pretrained_cfg,
+                       pretrained_cfg_overlay,
+                       cache_dir,
+                       pretrained_model_info1 : Optional[Munch] = None,
+                       pretrained_model_info2 : Optional[Munch] = None,
+                       pretrained_model_info3 : Optional[Munch] = None,
+                       verbose=False,
+                       pretrained=False):
+    
+    model = MultiTaskDeiT(do_jigsaw=do_jigsaw, 
+                          do_coloring=do_coloring, 
+                          do_classification=do_classification,
+                          pixel_shuffle_cfg=pixel_shuffle_cfg,
+                          jigsaw_cfg=jigsaw_cfg,
+                          n_classes=20,
+                          img_size=img_size,
+                          patch_size=16,
+                          embed_dim=192,
+                          depth=12,
+                          num_heads=3,
+                          mlp_ratio=4,
+                          qkv_bias=True,
+                          verbose=verbose,
+                          norm_layer=partial(nn.LayerNorm, eps=1e-6))
+    model.default_cfg = _cfg()
+    if pretrained:
+        if pretrained_model_info1 is None:
+            raise Exception('Requested Pretrained Model, but did not provide Pretrained path and info')
+        load_pretrained_weights(model, pretrained_model_info1, img_size=img_size, verbose=verbose)
+        load_pretrained_weights(model, pretrained_model_info2, img_size=img_size, verbose=verbose)
+        load_pretrained_weights(model, pretrained_model_info3, img_size=img_size, verbose=verbose)
+    del model.head
+    return model
+
+@register_model
 def MultiTaskDeiT_patch16_small(do_jigsaw : bool, 
                        do_coloring : bool, 
                        do_classification : bool, 
