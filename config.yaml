@@ -1,13 +1,13 @@
 model_name: 'MultiTaskDeiT_patch16_tiny'
-experiment_name: 'coloring_task'
-data_path: 'data'
+experiment_name: 'jigsaw_2by2_224_full'
+data_path: 'coco_colors'
 verbose: true
 img_size: 224
 batch_size: 32
 epochs: 50
-lr : 1e-3 # 1e-4 when backbone unfrozen
-weights: 'lossweights/weights.npy'
-n_workers: 0
+lr : 0.0005 # 0.0001 when backbone unfrozen, 0.001 when backbone frozen
+weights: 'lossweights/weights_25_bins_sigma_3_coco.npy'
+n_workers: 10
 
 
 active_heads:
@@ -17,24 +17,24 @@ active_heads:
 
 pretrained_info:
     checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
-    link: 'deit_tiny_patch16_224'
+    link: 'deit_tiny_patch16_224' # if checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
 
 
 pixel_shuffle_cfg:
-    do: true
+    do: false
     steps: 1
     smoothing: false
 
 jigsaw_cfg:
-    use_cls_embeds: true
-    n_jigsaw_patches: 7
+    use_cls_embeds: false
+    n_jigsaw_patches: 2
 
 freeze_modules:
-    cls_token: true
-    pos_embed: true
-    patch_embed: true
-    blocks: true
-    norm: true
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
     jigsaw_head: false
     coloring_decoder: false
     class_head: false
