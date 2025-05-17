@@ -2,7 +2,7 @@ model_name: 'MultiTaskDeiT_patch16_tiny'
 experiment_name: 'cls'
 data_path: 'coco_colors'
 verbose: true
-img_size: 240
+img_size: 224
 batch_size: 32
 epochs: 50
 lr : 0.001 # 0.0001 when backbone unfrozen, 0.001 when backbone frozen
@@ -12,6 +12,8 @@ n_workers: 10
 
 active_heads:
     coloring: false
+    classification: true
+    jigsaw: false
     classification: true
     jigsaw: false
 
@@ -30,6 +32,11 @@ jigsaw_cfg:
     n_jigsaw_patches: 2
 
 freeze_modules:
+    cls_token: true
+    pos_embed: true
+    patch_embed: true
+    blocks: true
+    norm: true
     cls_token: true
     pos_embed: true
     patch_embed: true

@@ -5,8 +5,9 @@ from collections import defaultdict
 
 if __name__ == "__main__":
     # Paths
-    coco_dir = 'coco_colors/images'  # Where COCO val images are currently
-    annotations_path = 'annotations/instances_val2014.json'
+    coco_dir = 'coco_colors'                                   
+    annotations_path = 'instances_val2014.json'
+    images_dir = os.path.join(coco_dir, 'images')          
     labels_file = os.path.join(coco_dir, 'labels.npz')
 
     # Load annotations
@@ -20,8 +21,12 @@ if __name__ == "__main__":
     num_classes = len(categories)
 
     # Track valid images
-    #image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
-    image_labels = {}
+    valid_images = {
+                    filename
+                    for filename in os.listdir(images_dir)
+                    if os.path.isfile(os.path.join(images_dir, filename))
+                    }
+    image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
 
     # Assign one-hot labels only for valid images
     for ann in annotations['annotations']:

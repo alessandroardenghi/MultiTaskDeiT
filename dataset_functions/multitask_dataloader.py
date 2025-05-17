@@ -211,7 +211,8 @@ class MultiTaskDataset(Dataset):
             
         if self.do_classification:
             if image_name not in self.labels_dict.keys():
-                raise Exception('LABEL NOT FOUND')
+                
+                raise Exception(f'{image_name} LABEL NOT FOUND')
             
             label_classification = self.labels_dict[image_name]
             label_classification = torch.tensor(label_classification, dtype=torch.float32)
