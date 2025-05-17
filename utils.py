@@ -285,8 +285,6 @@ class JigsawAccuracy:
         }
 
 
-def reconstruct_image(image, pos_rot_vector):
-    return image
 
 def freeze_submodule(model, submodule_name, freeze=True):
         """
@@ -524,3 +522,23 @@ def jigsaw_prediction(pred):
         pred[torch.arange(B), row_indices, :] = -1
 
     return predictions
+
+def compute_jigsaw_acc(model, loader):
+    total_patches = 0
+    correct = 0
+    model.eval()
+    for batch_idx, (imgs, labels) in enumerate(loader):
+        # imgs.image_jigsaw: (B, C, H, W)
+        outputs = model(imgs)
+        reordered_predictions = jigsaw_prediction(outputs.pred_jigsaw_pos)
+        
+        B, P, _ = outputs.pred_jigsaw_pos.shape
+        total_patches += B
+
+        # Top-1 predictions
+        #pos_top1 = outputs.pred_jigsaw_pos.argmax(dim=-1)
+        pos_top1 = reordered_predictions
+        # Count how many samples in the batch have all positions correct (vector match)
+        correct_current = ((pos_top1 == labels.pos_vec).all(dim=1)).sum().item()
+        correct += correct_current
+    return correct/total_patches

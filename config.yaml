@@ -16,8 +16,8 @@ active_heads:
     jigsaw: true
 
 pretrained_info:
-    checkpoint_type: 'timm_name'         # can either be 'torch_checkpoint' or 'timm_name'
-    link: 'deit_tiny_patch16_224'
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: 'checkpoint_jigsaw.pth'
 
 
 pixel_shuffle_cfg:
@@ -27,14 +27,14 @@ pixel_shuffle_cfg:
 
 jigsaw_cfg:
     use_cls_embeds: true
-    n_jigsaw_patches: 7
+    n_jigsaw_patches: 2
 
 freeze_modules:
-    cls_token: true
-    pos_embed: true
-    patch_embed: true
-    blocks: true
-    norm: true
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
     jigsaw_head: false
     coloring_decoder: false
     class_head: false

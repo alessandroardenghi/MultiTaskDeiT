@@ -3,7 +3,6 @@ import sys
 import os
 import numpy as np
 import torch
-from utils import add_gaussian_noise, grayscale_weighted_3ch, jigsaw_batch, reconstruct_image
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from .coloring_decoder import ColorizationDecoder, ColorizationDecoderPixelShuffle
 from .jigsaw_head import JigsawHead, JigsawPositionHead, JigsawRotationHead, JigsawMultiHead
