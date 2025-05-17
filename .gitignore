@@ -10,6 +10,7 @@ coco_grey
 val2014
 logs
 *.yaml
+annotations
 
 __pycache__/
 *.pyc

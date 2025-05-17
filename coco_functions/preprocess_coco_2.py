@@ -1,15 +1,11 @@
 import os
-import shutil
 import json
 import numpy as np
-import pickle
-from PIL import Image
-import cv2
 from collections import defaultdict
 
 if __name__ == "__main__":
     # Paths
-    coco_dir = 'coco_colors/images'                                   # 'coco/images'  # Where COCO val images are currently
+    coco_dir = 'coco_colors/images'  # Where COCO val images are currently
     annotations_path = 'annotations/instances_val2014.json'
     labels_file = os.path.join(coco_dir, 'labels.npz')
 
@@ -24,17 +20,21 @@ if __name__ == "__main__":
     num_classes = len(categories)
 
     # Track valid images
-    valid_images = set()
-    image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
-    skipped = 0
+    #image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
+    image_labels = {}
 
-    # Step 2: Assign one-hot labels only for valid images
+    # Assign one-hot labels only for valid images
     for ann in annotations['annotations']:
         img_id = ann['image_id']
         fname = image_id_to_filename.get(img_id)
-        if fname in valid_images:
-            cat_id = ann['category_id']
-            index = cat_id_to_index[cat_id]
-            image_labels[fname][index] = 1
+        cat_id = ann['category_id']
+        index = cat_id_to_index[cat_id]
+        empty_label = [i for i in range(num_classes)]
+        label = empty_label[index] = 1
+        image_labels[fname] = label
 
-    np.savez(labels_file, labels=dict(image_labels), classes=categories)
+
+    # Save as .npz with proper structure
+    np.savez(labels_file, labels=image_labels, classes=categories)
+
+    
