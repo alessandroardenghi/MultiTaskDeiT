@@ -104,9 +104,9 @@ class MultiTaskDataset(Dataset):
         image_classification = image_colorization.clone()
         #image_jigsaw, pos_vec, rot_vec = jigsaw_single_image(image_colorization, n_patches = self.num_patches)
         image_jigsaw, pos_vec, rot_vec = image_colorization.clone(), image_colorization.clone(), image_colorization.clone()
-    
+
         if image_name not in self.labels_dict.keys():
-            raise Exception('LABEL NOT FOUND')
+            raise Exception(f'{image_name} LABEL NOT FOUND')
             
         label_classification = self.labels_dict[image_name]
         label_classification = torch.tensor(label_classification, dtype=torch.float32)

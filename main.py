@@ -42,15 +42,16 @@ def main():
     
     
     model = create_model(cfg.model_name, 
-                         img_size = cfg.img_size,
-                         do_jigsaw = cfg.active_heads.jigsaw, 
-                         pretrained = True,
-                         do_classification = cfg.active_heads.classification, 
-                         do_coloring = cfg.active_heads.coloring, 
-                         jigsaw_cfg = cfg.jigsaw_cfg,
-                         pixel_shuffle_cfg = cfg.pixel_shuffle_cfg,
-                         verbose = cfg.verbose,
-                         pretrained_model_info = cfg.pretrained_info) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
+                        n_classes = cfg.classification_cfg.n_classes,
+                        img_size = cfg.img_size,
+                        do_jigsaw = cfg.active_heads.jigsaw, 
+                        pretrained = True,
+                        do_classification = cfg.active_heads.classification, 
+                        do_coloring = cfg.active_heads.coloring, 
+                        jigsaw_cfg = cfg.jigsaw_cfg,
+                        pixel_shuffle_cfg = cfg.pixel_shuffle_cfg,
+                        verbose = cfg.verbose,
+                        pretrained_model_info = cfg.pretrained_info) # /home/3141445/.cache/torch/hub/checkpoints/deit_tiny_patch16_224-a1311bcf.pth
     
     
     freeze_components(model, component_names=[module for module, v in cfg.freeze_modules.items() if v], freeze=True, verbose=cfg.verbose)
