@@ -11,6 +11,9 @@ val2014
 logs
 *.yaml
 annotations
+_coloring_models*
+_jigsaw_models*
+
 
 __pycache__/
 *.pyc
