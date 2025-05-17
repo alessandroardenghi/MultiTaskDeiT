@@ -42,20 +42,25 @@ OPTIONAL :
 
 
 RUNS:
-1. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle, WeightedMSE
-1. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle, WeightedMSE
-1. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle, WeightedMSE
+1. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle, WeightedMSE ✅
+1. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle, WeightedMSE ✅
+1. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle, WeightedMSE 
 1. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring pixelshuffle, WeightedMSE
 
-2. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle 2 steps, WeightedMSE
-2. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle 2 steps, WeightedMSE
-2. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle 2 steps, WeightedMSE
+2. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring pixelshuffle 2 steps, WeightedMSE 
+2. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring pixelshuffle 2 steps, WeightedMSE 
+2. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring pixelshuffle 2 steps, WeightedMSE ✅
 2. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring pixelshuffle 2 steps, WeightedMSE
 
-3. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring upsampling, WeightedMSE
+3. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, coloring upsampling, WeightedMSE ✅
 3. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, coloring upsampling, WeightedMSE
-3. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring upsampling, WeightedMSE
+3. ViT Tiny, patch 16, img size 384, augmentation, frozen backbone, coloring upsampling, WeightedMSE ✅
 3. ViT Tiny, patch 16, img size 384, augmentation, unfrozen backbone, coloring upsampling, WeightedMSE
+
+3. ViT Tiny, patch 8, img size 240, augmentation, unfrozen backbone, coloring upsampling, WeightedMSE
+3. ViT Tiny, patch 8, img size 240, augmentation, frozen backbone, coloring upsampling, WeightedMSE
+3. ViT Tiny, patch 8, img size 384, augmentation, frozen backbone, coloring upsampling, WeightedMSE
+3. ViT Tiny, patch 8, img size 384, augmentation, unfrozen backbone, coloring upsampling, WeightedMSE
 
 4. ViT Tiny, patch 16, img size 240, augmentation, frozen backbone, jigsaw class tokens
 4. ViT Tiny, patch 16, img size 240, augmentation, unfrozen backbone, jigsaw class tokens

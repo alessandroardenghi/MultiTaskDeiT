@@ -54,7 +54,7 @@ def main():
     
     base = cfg.pretrained_info.link.split("/checkpoints")[0]
     images_url = f"{base}/colored_images"
-    recolor_images(data_path='data', output_dir=images_url, split='val', model=model, n_images=20, shuffle=False, img_size=cfg.img_size)
+    recolor_images(data_path='coco_colors', output_dir=images_url, split='test', model=model, n_images=20, shuffle=False, img_size=cfg.img_size)
     return
 
 if __name__ == '__main__':
