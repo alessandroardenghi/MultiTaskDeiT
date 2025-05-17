@@ -31,6 +31,9 @@ jigsaw_cfg:
     use_cls_embeds: true
     n_jigsaw_patches: 2
 
+classification_cfg:
+    n_classes: 80
+
 freeze_modules:
     cls_token: true
     pos_embed: true

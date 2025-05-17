@@ -6,7 +6,7 @@ from collections import defaultdict
 if __name__ == "__main__":
     # Paths
     coco_dir = 'coco_colors'                                   
-    annotations_path = 'instances_val2014.json'
+    annotations_path = 'annotations/instances_val2014.json'
     images_dir = os.path.join(coco_dir, 'images')          
     labels_file = os.path.join(coco_dir, 'labels.npz')
 
@@ -27,16 +27,16 @@ if __name__ == "__main__":
                     if os.path.isfile(os.path.join(images_dir, filename))
                     }
     image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
-
+    image_labels = {}
     # Assign one-hot labels only for valid images
     for ann in annotations['annotations']:
         img_id = ann['image_id']
         fname = image_id_to_filename.get(img_id)
         cat_id = ann['category_id']
         index = cat_id_to_index[cat_id]
-        empty_label = [i for i in range(num_classes)]
-        label = empty_label[index] = 1
-        image_labels[fname] = label
+        empty_label =np.zeros(num_classes, dtype=np.float32)
+        empty_label[index] = 1.0
+        image_labels[fname] = empty_label
 
 
     # Save as .npz with proper structure
