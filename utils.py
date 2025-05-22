@@ -179,7 +179,7 @@ def hamming_acc(y_pred, y_true):
     correct = correct.item()
     total =  y_true.numel()
     
-    return correct / total
+    return correct / total, total
 
     # if isinstance(y_true, torch.Tensor):
     #     correct = (y_true == y_pred).float().sum()
@@ -190,6 +190,15 @@ def hamming_acc(y_pred, y_true):
     #     correct = (y_true == y_pred).sum()
     #     total = y_true.size
     #     return correct / total
+
+def multilabel_recall(y_pred, y_true):
+    # Element-wise AND → only positions where both pred and label are 1
+    correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
+
+    # Total ground truth positives (i.e., how many 1s in labels)
+    total_positives = (y_true == 1).sum().item()
+
+    return correct_positives / total_positives if total_positives > 0 else 0, total_positives
 
 
 def save_model(model, path=None, name = None):
@@ -542,3 +551,18 @@ def compute_jigsaw_acc(model, loader):
         correct_current = ((pos_top1 == labels.pos_vec).all(dim=1)).sum().item()
         correct += correct_current
     return correct/total_patches
+
+def simple_combine_losses(losses, active_heads):
+    """ 
+    Combine losses based on the active heads.
+    Args:
+        losses (list): List of losses.
+        active_heads (list): List of active heads.
+    Returns:
+        combined_loss (float): Combined loss.
+    """
+    alpha = 175.0
+    beta = 1000.0
+    gamma = 10.0
+    combined_loss = alpha * losses[0] + beta * losses[1] + gamma * losses[2]
+    return combined_loss

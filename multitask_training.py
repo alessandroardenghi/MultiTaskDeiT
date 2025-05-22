@@ -67,7 +67,7 @@ def train_one_epoch(
     loss_m_jigsaw = AverageMeter()  # For tracking the jigsaw loss
 
     acc_m_classification = AverageMeter() # For tracking the classification accuracy
-    acc_m_pos = JigsawAccuracy(n=5) # For tracking the jigsaw accuracy in predicting positions
+    acc_m_pos = JigsawAccuracy(n=3) # For tracking the jigsaw accuracy in predicting positions
     acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
 
     for batch_index, (images, labels) in enumerate(tqdm(data_loader, desc="Training", leave=False)):
@@ -120,7 +120,7 @@ def train_one_epoch(
         assert B != 0
         
         # Combine losses
-        loss = combine_losses(losses, active_heads) ##TODO: write combine_losses function
+        loss = combine_losses(losses, active_heads)
         loss_m.update(loss.item(), B)
 
         # Backward
@@ -131,7 +131,8 @@ def train_one_epoch(
         # Metrics
         if 'classification' in active_heads:
             class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
-            acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])  
+            c_frac, total = accuracy_fun(class_outputs, labels.label_classification)
+            acc_m_classification.update(c_frac, total)  
         
         if 'jigsaw' in active_heads:
             acc_m_pos.update(outputs.pred_jigsaw_pos, labels.pos_vec)
@@ -199,7 +200,7 @@ def validate(
     loss_m_jigsaw = AverageMeter()  # For tracking the jigsaw loss
 
     acc_m_classification = AverageMeter() # For tracking the classification accuracy
-    acc_m_pos = JigsawAccuracy(n=5) # For tracking the jigsaw accuracy in predicting positions
+    acc_m_pos = JigsawAccuracy(n=3) # For tracking the jigsaw accuracy in predicting positions
     acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations
 
     with torch.no_grad():
@@ -251,7 +252,8 @@ def validate(
             # Metrics
             if 'classification' in active_heads:
                 class_outputs = (torch.sigmoid(outputs.pred_cls) > threshold).int()
-                acc_m_classification.update(accuracy_fun(class_outputs, labels.label_classification), images.image_classification.shape[0])
+                c_frac, total = accuracy_fun(class_outputs, labels.label_classification)
+                acc_m_classification.update(c_frac, total)
             if 'jigsaw' in active_heads:
                 acc_m_pos.update(outputs.pred_jigsaw_pos, labels.pos_vec)
                 acc_m_rot.update(outputs.pred_jigsaw_rot, labels.rot_vec)

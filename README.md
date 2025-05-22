@@ -37,6 +37,7 @@ MEDIUM:
 - write reconstruction function to rebuild jigsaw images 
 LOW:
 - clean utils
+- evaluation scripts on the test set are bad
 OPTIONAL :
 -  create the noise head.
 

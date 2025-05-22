@@ -10,8 +10,8 @@ from collections import defaultdict
 if __name__ == "__main__":
     # Paths
     coco_dir = 'coco_colors'
-    images_src_dir = ''                                     # 'coco/images'  # Where COCO val images are currently
-    images_dst_dir = os.path.join(coco_dir, 'images')
+    images_src_dir = 'coco_colors/images'                                     # 'coco/images'  # Where COCO val images are currently
+    images_dst_dir = os.path.join(coco_dir, 'temp')
     annotations_path = 'annotations/instances_val2014.json'
     labels_file = os.path.join(coco_dir, 'labels.npz')
 
@@ -26,13 +26,21 @@ if __name__ == "__main__":
 
     # Create mappings
     image_id_to_filename = {img['id']: img['file_name'] for img in annotations['images']}
+    filename_to_image_id = {img['file_name']: img['id'] for img in annotations['images']}
     categories = annotations['categories']
     cat_id_to_index = {cat['id']: i for i, cat in enumerate(categories)}
     num_classes = len(categories)
 
+    # images without annotations
+    ann_by_image = defaultdict(list)
+    for ann in annotations['annotations']:
+        ann_by_image[ann['image_id']].append(ann)
+    all_image_ids = [img['id'] for img in annotations['images']]
+    images_without_anns = [img_id for img_id in all_image_ids if img_id not in ann_by_image]
+
     # Track valid images
     valid_images = set()
-    image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
+    #image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
     skipped = 0
 
     # Step 1: Filter and move images
@@ -41,6 +49,12 @@ if __name__ == "__main__":
             continue
 
         src_path = os.path.join(images_src_dir, fname)
+        img_id = filename_to_image_id.get(fname)
+
+        if img_id in images_without_anns:
+            skipped += 1
+            print(f"Skipping image without annotations: {fname}")
+            continue
 
         try:
             img_bgr = cv2.imread(src_path)
@@ -71,12 +85,27 @@ if __name__ == "__main__":
     print(f"Skipped {skipped} low-color images.")
 
     # Step 2: Assign one-hot labels only for valid images
+    # for ann in annotations['annotations']:
+    #     img_id = ann['image_id']
+    #     fname = image_id_to_filename.get(img_id)
+    #     if fname in valid_images:
+    #         cat_id = ann['category_id']
+    #         index = cat_id_to_index[cat_id]
+    #         image_labels[fname][index] = 1.0
+
+    # np.savez(labels_file, labels=dict(image_labels), classes=categories)
+
+    image_labels = {}
+    # Assign one-hot labels only for valid images
     for ann in annotations['annotations']:
         img_id = ann['image_id']
         fname = image_id_to_filename.get(img_id)
-        if fname in valid_images:
+        if fname in valid_images: 
             cat_id = ann['category_id']
             index = cat_id_to_index[cat_id]
-            image_labels[fname][index] = 1
+            empty_label =np.zeros(num_classes, dtype=np.float32)
+            empty_label[index] = 1.0
+            image_labels[fname] = empty_label
 
-    np.savez(labels_file, labels=dict(image_labels), classes=categories)
+    # Save as .npz with proper structure
+    np.savez(labels_file, labels=image_labels, classes=categories)

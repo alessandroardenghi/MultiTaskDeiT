@@ -13,7 +13,7 @@ from loss import WeightedL1Loss, WeightedMSELoss
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
+from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, multilabel_recall
 from timm import create_model
 from logger import TrainingLogger
 #from torch.optim.lr_scheduler import OneCycleLR
@@ -129,7 +129,7 @@ def main():
         num_epochs=cfg.epochs,
         active_heads=[head for head, v in cfg.active_heads.items() if v],
         combine_losses=combine_losses,
-        accuracy_fun=hamming_acc,
+        accuracy_fun=multilabel_recall,
         logger=logger,
         threshold=0.5
     )

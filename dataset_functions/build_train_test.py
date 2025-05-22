@@ -37,8 +37,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Split files into train, val, and test sets.")
     parser.add_argument("directory", type=str, help="Directory containing the files to split.")
     parser.add_argument("-t", "--train_ratio", type=float, default=0.7, help="Ratio of training files.")
-    parser.add_argument("-v", "--val_ratio", type=float, default=0.15, help="Ratio of validation files.")
-    parser.add_argument("-s", "--test_ratio", type=float, default=0.15, help="Ratio of test files.")
+    parser.add_argument("-v", "--val_ratio", type=float, default=0.20, help="Ratio of validation files.")
+    parser.add_argument("-s", "--test_ratio", type=float, default=0.10, help="Ratio of test files.")
     parser.add_argument("-o", "--output_dir", type=str, default=".", help="Directory to save the output txt files.")
     args = parser.parse_args()
 

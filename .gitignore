@@ -7,6 +7,7 @@ temp.ipynb
 coco
 coco_colors
 coco_grey
+coco_removed
 val2014
 logs
 *.yaml

@@ -13,7 +13,7 @@ from loss import WeightedL1Loss, WeightedMSELoss
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint
+from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, simple_combine_losses, multilabel_recall
 from timm import create_model
 from logger import TrainingLogger
 #from torch.optim.lr_scheduler import OneCycleLR
@@ -34,6 +34,7 @@ def main():
     logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config3_models.yaml')
 
+    logger.log(f'loss hyperparameters: alpha=175, beta=1000, gamma=10')
     
     if cfg.weights != '':
         weights = torch.from_numpy(np.load(cfg.weights))
@@ -48,6 +49,7 @@ def main():
                          do_classification = cfg.active_heads.classification, 
                          do_coloring = cfg.active_heads.coloring, 
                          jigsaw_cfg = cfg.jigsaw_cfg,
+                         n_classes = cfg.classification_cfg.n_classes,
                          pixel_shuffle_cfg = cfg.pixel_shuffle_cfg,
                          verbose = cfg.verbose,
                          pretrained_model_info1 = cfg.pretrained_info1,
@@ -112,7 +114,7 @@ def main():
             final_div_factor=1e4,  # end LR = max_lr / final_div_factor
         )
 
-    combine_losses = lambda x,y: x.sum()
+    #combine_losses = lambda x,y: x.sum()
 
     #print(f"Training with active heads: {' '.join(active_heads)}")
     print('='*100)
@@ -129,8 +131,8 @@ def main():
         scheduler=scheduler,
         num_epochs=cfg.epochs,
         active_heads=[head for head, v in cfg.active_heads.items() if v],
-        combine_losses=combine_losses,
-        accuracy_fun=hamming_acc,
+        combine_losses=simple_combine_losses,
+        accuracy_fun=multilabel_recall,
         logger=logger,
         threshold=0.5
     )

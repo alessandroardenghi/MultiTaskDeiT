@@ -26,18 +26,20 @@ if __name__ == "__main__":
                     for filename in os.listdir(images_dir)
                     if os.path.isfile(os.path.join(images_dir, filename))
                     }
-    image_labels = defaultdict(lambda: np.zeros(num_classes, dtype=int))
+
     image_labels = {}
     # Assign one-hot labels only for valid images
     for ann in annotations['annotations']:
         img_id = ann['image_id']
         fname = image_id_to_filename.get(img_id)
-        cat_id = ann['category_id']
-        index = cat_id_to_index[cat_id]
-        empty_label =np.zeros(num_classes, dtype=np.float32)
-        empty_label[index] = 1.0
-        image_labels[fname] = empty_label
-
+        if fname in valid_images: 
+            cat_id = ann['category_id']
+            index = cat_id_to_index[cat_id]
+            if fname in image_labels:
+                image_labels[fname][index] = 1.0
+            else:
+                image_labels[fname] = np.zeros(num_classes, dtype=np.float32)
+                image_labels[fname][index] = 1.0
 
     # Save as .npz with proper structure
     np.savez(labels_file, labels=image_labels, classes=categories)
