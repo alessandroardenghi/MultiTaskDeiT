@@ -9,7 +9,6 @@ from tqdm import tqdm
 import timm
 import os
 import numpy as np
-from dataset_functions.classification import ClassificationDataset
 from munch import Munch
 from utils import AverageMeter, JigsawAccuracy, save_model
 from logger import TrainingLogger

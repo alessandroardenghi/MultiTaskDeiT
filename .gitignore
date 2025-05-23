@@ -2,6 +2,8 @@ VOCdevkit
 data
 err
 out
+class_metrics
+jigsaw_metrics
 *.sh
 temp.ipynb
 coco
