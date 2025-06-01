@@ -22,14 +22,14 @@ def download_with_progress(url, output_path, timeout=10):
                 size = f.write(chunk)
                 bar.update(size)
 
-# Step 1: Download
+# DOWNLOADING
 if not os.path.exists(tar_path):
     print("Downloading VOC 2012 with progress...")
     download_with_progress(voc_url, tar_path)
 else:
     print("VOC tar already exists.")
 
-# Step 2: Extract
+# EXTRACTING
 if not os.path.exists(os.path.join(extract_path, "VOC2012")):
     print("Extracting VOC 2012...")
     with tarfile.open(tar_path) as tar:
