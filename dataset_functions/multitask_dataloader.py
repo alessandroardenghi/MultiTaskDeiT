@@ -155,8 +155,8 @@ class MultiTaskDataset(Dataset):
         self.do_rotate=do_rotate
         self.transform = transform
         self.image_dir = os.path.join(data_dir, 'images')
-        npz_data = np.load(os.path.join(data_dir, 'labels.npz'), allow_pickle=True)
-        self.labels_dict = npz_data['labels'].item()
+        #npz_data = np.load(os.path.join(data_dir, 'labels.npz'), allow_pickle=True)
+        #self.labels_dict = npz_data['labels'].item()
         self.num_patches = num_patches
         
         if transform and split == 'train':

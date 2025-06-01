@@ -1,6 +1,6 @@
 model_name: 'MultiTaskDeiT_patch16_tiny'
 experiment_name: 'classification_multilabels_240_finetune'
-data_path: 'coco_colors'
+data_path: 'data2'
 verbose: true
 img_size: 240
 batch_size: 32
@@ -17,7 +17,7 @@ active_heads:
 
 pretrained_info:
     checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
-    link: 'logs/classification_multilabels_240_frozen_20250520_1955/checkpoints/best_model.pth' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+    link: 'best_multihead.pth' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
 
 
 pixel_shuffle_cfg:
