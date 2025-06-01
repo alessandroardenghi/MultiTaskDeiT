@@ -6,11 +6,18 @@ import pickle
 from PIL import Image
 import cv2
 from collections import defaultdict
+import argparse
 
 if __name__ == "__main__":
     # Paths
-    coco_dir = 'coco_colors'
-    images_src_dir = 'coco_colors/images'                                     # 'coco/images'  # Where COCO val images are currently
+    
+    parser = argparse.ArgumentParser(description="Split COCO images based on colorfulness and annotations.")
+    parser.add_argument('--annotations_path', type=str, default='annotations/instances_val2014.json', help='Path to COCO annotations JSON')
+    parser.add_argument('--output_dir', type=str, default='coco_data', help='Output COCO directory')
+    args = parser.parse_args()
+    
+    coco_dir = args.output_dir
+    images_src_dir = os.path.join(coco_dir, 'images')                            # 'coco/images'  # Where COCO val images are currently
     images_dst_dir = os.path.join(coco_dir, 'temp')
     annotations_path = 'annotations/instances_val2014.json'
     labels_file = os.path.join(coco_dir, 'labels.npz')
@@ -84,16 +91,6 @@ if __name__ == "__main__":
 
     print(f"Skipped {skipped} low-color images.")
 
-    # Step 2: Assign one-hot labels only for valid images
-    # for ann in annotations['annotations']:
-    #     img_id = ann['image_id']
-    #     fname = image_id_to_filename.get(img_id)
-    #     if fname in valid_images:
-    #         cat_id = ann['category_id']
-    #         index = cat_id_to_index[cat_id]
-    #         image_labels[fname][index] = 1.0
-
-    # np.savez(labels_file, labels=dict(image_labels), classes=categories)
 
     image_labels = {}
     # Assign one-hot labels only for valid images
@@ -103,9 +100,11 @@ if __name__ == "__main__":
         if fname in valid_images: 
             cat_id = ann['category_id']
             index = cat_id_to_index[cat_id]
-            empty_label =np.zeros(num_classes, dtype=np.float32)
-            empty_label[index] = 1.0
-            image_labels[fname] = empty_label
+            if fname in image_labels:
+                image_labels[fname][index] = 1.0
+            else:
+                image_labels[fname] = np.zeros(num_classes, dtype=np.float32)
+                image_labels[fname][index] = 1.0
 
     # Save as .npz with proper structure
     np.savez(labels_file, labels=image_labels, classes=categories)

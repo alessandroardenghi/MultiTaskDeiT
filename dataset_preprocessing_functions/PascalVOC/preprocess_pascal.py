@@ -2,13 +2,20 @@ import os
 import shutil
 import numpy as np
 from tqdm import tqdm
+import argparse
 import xml.etree.ElementTree as ET
 
 # Define paths
+parser = argparse.ArgumentParser(description="Preprocess Pascal VOC dataset.")
+parser.add_argument("--destination_dir", type=str, default="data", help="Path to destination images directory")
+args = parser.parse_args()
+
+destination_dir = args.destination_dir
+
 source_images_dir = "VOCdevkit/VOC2012/JPEGImages"
 source_annotations_dir = "VOCdevkit/VOC2012/Annotations"
-destination_images_dir = "data/images"
-output_labels_file = "data/labels.npz"
+destination_images_dir = os.path.join(destination_dir, "images")
+output_labels_file = os.path.join(destination_dir, "labels.npz")
 
 
 VOC_CLASSES = [
@@ -17,6 +24,7 @@ VOC_CLASSES = [
     'diningtable', 'dog', 'horse', 'motorbike', 'person', 
     'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor'
 ]
+
 class_to_idx = {cls: i for i, cls in enumerate(VOC_CLASSES)}
 
 

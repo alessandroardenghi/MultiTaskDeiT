@@ -4,7 +4,6 @@ err
 out
 class_metrics
 jigsaw_metrics
-*.sh
 temp.ipynb
 val2014
 logs
@@ -16,6 +15,9 @@ _jigsaw_models*
 tests
 *.jpg
 coco_colors
+*temp*
+_err
+_out
 
 __pycache__/
 *.pyc
