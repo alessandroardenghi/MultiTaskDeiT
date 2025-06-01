@@ -4,7 +4,6 @@ err
 out
 class_metrics
 jigsaw_metrics
-*.sh
 temp.ipynb
 val2014
 logs
