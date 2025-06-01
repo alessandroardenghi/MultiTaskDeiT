@@ -6,10 +6,6 @@ class_metrics
 jigsaw_metrics
 *.sh
 temp.ipynb
-coco
-coco_colors
-coco_grey
-coco_removed
 val2014
 logs
 class_top_metrics
