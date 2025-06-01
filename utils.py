@@ -6,6 +6,10 @@ import os
 import torch.nn as nn
 from timm import create_model
 import cv2
+#from dataset_functions.multitask_dataloader import MultiTaskDataset
+from torch.utils.data import DataLoader
+from PIL import Image
+
 
 def jigsaw_image(image : np.array, 
                  n: int, 
@@ -200,6 +204,82 @@ def multilabel_recall(y_pred, y_true):
 
     return correct_positives / total_positives if total_positives > 0 else 0, total_positives
 
+def multilabel_precision(y_pred, y_true):
+    # Element-wise AND → positions where both pred and label are 1
+    correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
+
+    # Total predicted positives (i.e., how many 1s in predictions)
+    total_predicted = (y_pred == 1).sum().item()
+
+    return correct_positives / total_predicted if total_predicted > 0 else 0, total_predicted
+
+def multilabel_f1(prec, recal):
+    # F1 = 2 * (precision * recall) / (precision + recall)
+    if prec + recal == 0:
+        return 0
+    else:
+        return 2 * (prec * recal) / (prec + recal)
+
+def multilabel_accuracy(y_pred, y_true):
+    # Compare predictions and labels element-wise → shape: (B, N)
+    matches = (y_pred == y_true)
+
+    # For each vector, check if all elements match → shape: (B,)
+    exact_matches = matches.all(dim=1)
+
+    # Convert boolean tensor to float and average
+    accuracy = exact_matches.float().mean().item()
+
+    return accuracy, y_pred.shape[0]  # Return accuracy and batch size
+
+def compute_micro_precision_recall_f1(total_tp, total_fp, total_fn):
+    """
+    Compute micro-averaged precision, recall, and F1 score.
+    
+    Args:
+        total_tp: Total true positives across batches
+        total_fp: Total false positives across batches
+        total_fn: Total false negatives across batches
+    
+    Returns:
+        precision, recall, f1_score
+    """
+    precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
+    recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
+
+    if (precision + recall) > 0:
+        f1 = 2 * precision * recall / (precision + recall)
+    else:
+        f1 = 0.0
+
+    return precision, recall, f1
+
+def compute_perclass_f1(tp, fp, fn):
+    epsilon = 1e-8  # for numerical stability
+
+    precision = tp / (tp + fp + epsilon)
+    recall = tp / (tp + fn + epsilon)
+    f1 = 2 * precision * recall / (precision + recall + epsilon)
+
+    macro_f1 = f1.mean().item()
+    return precision.tolist(), recall.tolist(), f1.tolist(), macro_f1
+
+def update_perclass_metrics(y_pred, y_true):
+    """
+    Compute true positives, false positives, and false negatives for a batch.
+    
+    Args:
+        y_pred: Tensor of shape (B, N), binary predictions.
+        y_true: Tensor of shape (B, N), binary ground truth.
+
+    Returns:
+        A tuple of (true_positives, false_positives, false_negatives)
+    """
+    tp = ((y_pred == 1) & (y_true == 1)).sum(dim=0)
+    fp = ((y_pred == 1) & (y_true == 0)).sum(dim=0)
+    fn = ((y_pred == 0) & (y_true == 1)).sum(dim=0)
+
+    return tp, fp, fn
 
 def save_model(model, path=None, name = None):
     """
@@ -388,22 +468,6 @@ def recolor_image(L, ab):
 
     return rgb_reconstructed
 
-from dataset_functions.classification import MultiTaskDataset
-from torch.utils.data import DataLoader
-from PIL import Image
-
-def recolor_images(data_path, output_dir, split, model, n_images, img_size, shuffle=False):
-    os.makedirs(output_dir, exist_ok=True)
-    dataset = MultiTaskDataset(data_path, split=split, img_size=img_size)
-    loader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
-    for i, (images, labels) in enumerate(loader):
-        if i >= n_images:
-            break
-        output = model(images)
-        #colored_img = recolor_image(images.image_colorization[0], labels.ab_channels[0])
-        colored_img = recolor_image(images.image_colorization[0].detach(), output.pred_coloring[0].detach())
-        colored_img = Image.fromarray(colored_img)
-        colored_img.save(os.path.join(output_dir,f'image{i}.jpg'))
 
 def load_partial_checkpoint(model, checkpoint_path, verbose=False):
     checkpoint = torch.load(checkpoint_path, map_location='cpu')
@@ -555,14 +619,17 @@ def compute_jigsaw_acc(model, loader):
 def simple_combine_losses(losses, active_heads):
     """ 
     Combine losses based on the active heads.
+    alpha : weight for classification loss
+    beta : weight for coloring loss
+    gamma : weight for jigsaw loss
     Args:
         losses (list): List of losses.
         active_heads (list): List of active heads.
     Returns:
         combined_loss (float): Combined loss.
     """
-    alpha = 175.0
-    beta = 1000.0
-    gamma = 10.0
+    alpha = 1.1
+    beta = 6.0
+    gamma = 0.05
     combined_loss = alpha * losses[0] + beta * losses[1] + gamma * losses[2]
     return combined_loss

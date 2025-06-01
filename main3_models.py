@@ -34,7 +34,7 @@ def main():
     logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config3_models.yaml')
 
-    logger.log(f'loss hyperparameters: alpha=175, beta=1000, gamma=10')
+    logger.log(f'loss hyperparameters: alpha=1.1, beta=6, gamma=0.05')
     
     if cfg.weights != '':
         weights = torch.from_numpy(np.load(cfg.weights))
