@@ -13,6 +13,8 @@ annotations
 _coloring_models*
 _jigsaw_models*
 tests
+*.jpg
+coco_colors
 
 __pycache__/
 *.pyc
