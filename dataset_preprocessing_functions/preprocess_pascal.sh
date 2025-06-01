@@ -15,4 +15,5 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 rm -f VOCtrainval_11-May-2012.tar
+rm -rf VOCdevkit
 echo "PascalVOC was correctly downloaded and preprocessed."

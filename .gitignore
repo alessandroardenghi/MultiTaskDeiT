@@ -15,6 +15,9 @@ _jigsaw_models*
 tests
 *.jpg
 coco_colors
+*temp*
+_err
+_out
 
 __pycache__/
 *.pyc
