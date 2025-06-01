@@ -5,6 +5,17 @@ import cv2
 import os
 import torch.nn as nn
 from timm import create_model
+import yaml
+from munch import Munch
+
+def move_to_device(munch_obj, device):
+    return Munch({k: v.to(device) if isinstance(v, torch.Tensor) else v
+                  for k, v in munch_obj.items()})
+
+def load_config(path):
+    with open(path, 'r') as f:
+        cfg = yaml.safe_load(f)
+    return Munch.fromDict(cfg)
 
 ################################################################################################
 ######## DATA UTILS ############################################################################

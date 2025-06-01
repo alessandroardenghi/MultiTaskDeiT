@@ -1,21 +1,19 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
-from collections.abc import Iterable, Callable
-from typing import List
-from torchvision import datasets, transforms
-from tqdm import tqdm
 import timm
 import os
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from tqdm import tqdm
 from munch import Munch
-from utils import AverageMeter, JigsawAccuracy, save_model
-from logger import TrainingLogger
 
-def move_to_device(munch_obj, device):
-    return Munch({k: v.to(device) if isinstance(v, torch.Tensor) else v
-                  for k, v in munch_obj.items()})
+from torch.utils.data import DataLoader
+
+from collections.abc import Iterable, Callable
+from typing import List
+
+from utils import AverageMeter, JigsawAccuracy, load_config, move_to_device
+from logger import TrainingLogger
 
 def train_one_epoch(
     model: nn.Module,
@@ -73,16 +71,9 @@ def train_one_epoch(
         
         images = move_to_device(images, device)
         labels = move_to_device(labels, device)
-        
-        
+    
         # Forward and losses calculation
         outputs = model(images)
-        # print(f'OUTPUTS PRED CLSDEVICE: {outputs.pred_cls.device}')
-        # print(f'OUTPUTS PRED COLORING DEVICE: {outputs.pred_coloring.device}')
-        # print(f'OUTPUTS PRED JIGSAW: {outputs.pred_jigsaw.device}')
-        # print(f'OUTPUTS POS VEC JIGSAW: {outputs.pos_vector.device}')
-        # print(f'OUTPUTS ROT VEC JIGSAW: {outputs.rot_vector.device}')
-        
         losses = torch.zeros(3).to(device)
         B = 0
         
@@ -364,26 +355,7 @@ def train_model(
                 scheduler.step(val_metrics.val_epoch_loss)
             else:
                 scheduler.step()
-        # Print metrics
-        # print(f"Train Loss: {train_metrics.train_epoch_loss:.4f} | \
-        #     Train Classification Loss: {train_metrics.train_epoch_classification_loss:.4f} | \
-        #     Train Coloring Loss: {train_metrics.train_epoch_coloring_loss:.4f} | \
-        #     Train Jigsaw Loss: {train_metrics.train_epoch_jigsaw_loss:.4f}")
-        # print(f"Train Class Acc: {train_metrics.train_epoch_class_accurary:.4f} | \
-        #     Train Jigsaw Pos Acc: {train_metrics.train_epoch_jigsaw_pos_accuracy:.4f} | \
-        #     Train Jigsaw Pos TopN Acc: {train_metrics.train_epoch_jigsaw_pos_topnaccuracy:.4f} | \
-        #     Train Jigsaw Rot Acc: {train_metrics.train_epoch_jigsaw_rot_accuracy:.4f}")
-        # print('='*50)
-        # print(f"Val Loss: {val_metrics.val_epoch_loss:.4f} | \
-        #     Val Classification Loss: {val_metrics.val_epoch_classification_loss:.4f} | \
-        #     Val Coloring Loss: {val_metrics.val_epoch_coloring_loss:.4f} | \
-        #     Val Jigsaw Loss: {val_metrics.val_epoch_jigsaw_loss:.4f}")
-        # print(f"Val Class Acc: {val_metrics.val_epoch_class_accurary:.4f} | \
-        #     Val Jigsaw Pos Acc: {val_metrics.val_epoch_jigsaw_pos_accuracy:.4f} | \
-        #     Val Jigsaw Pos TopN Acc: {val_metrics.val_epoch_jigsaw_pos_topnaccuracy:.4f} | \
-        #     Val Jigsaw Rot Acc: {val_metrics.val_epoch_jigsaw_rot_accuracy:.4f}\n")
-        # print('='*170)
-
+        
     logger.log(f"Training completed")
     logger.log_epoch(epoch=epoch, 
                     train_metrics=train_metrics, 
@@ -395,6 +367,3 @@ def train_model(
                         optimizer=optimizer, 
                         epoch=epoch
     )
-
-    # if save_path is not None:
-    #     save_model(model, path=save_path)

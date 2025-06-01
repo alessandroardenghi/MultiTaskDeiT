@@ -1,31 +1,23 @@
+import os
+import json
+import numpy as np
+from munch import Munch
+import timm
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
-from torchvision import datasets, transforms
-import models.model_registry
-import timm
-import os
-import numpy as np
+
+from torch.utils.data import DataLoader
 from dataset_functions.multitask_dataloader import MultiTaskDataset
-from munch import Munch
-from loss import WeightedL1Loss, WeightedMSELoss
-from utils import AverageMeter, JigsawAccuracy
-from models.full_model import MultiTaskDeiT
-from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, multilabel_recall
+
+import torch.optim as optim
 from timm import create_model
+import models.model_registry
+from models.full_model import MultiTaskDeiT
+
+from loss import WeightedL1Loss, WeightedMSELoss
+from multitask_training import train_model
 from logger import TrainingLogger
-#from torch.optim.lr_scheduler import OneCycleLR
-
-import yaml
-from munch import Munch
-
-def load_config(path):
-    with open(path, 'r') as f:
-        cfg = yaml.safe_load(f)
-    return Munch.fromDict(cfg)
-
+from utils import *
 
 
 def main():
