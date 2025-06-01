@@ -2,8 +2,6 @@ import os
 import shutil
 import json
 import numpy as np
-import pickle
-from PIL import Image
 import cv2
 from collections import defaultdict
 import argparse
@@ -12,14 +10,14 @@ if __name__ == "__main__":
     # Paths
     
     parser = argparse.ArgumentParser(description="Split COCO images based on colorfulness and annotations.")
-    parser.add_argument('--annotations_path', type=str, default='annotations/instances_val2014.json', help='Path to COCO annotations JSON')
+    parser.add_argument('--annotations_path', type=str, default='coco_data/annotations', help='Path to COCO annotations JSON')
     parser.add_argument('--output_dir', type=str, default='coco_data', help='Output COCO directory')
     args = parser.parse_args()
     
     coco_dir = args.output_dir
-    images_src_dir = os.path.join(coco_dir, 'images')                            # 'coco/images'  # Where COCO val images are currently
-    images_dst_dir = os.path.join(coco_dir, 'temp')
-    annotations_path = 'annotations/instances_val2014.json'
+    images_src_dir = 'coco_data/val2014'                            # 'coco/images'  # Where COCO val images are currently
+    images_dst_dir = os.path.join(coco_dir, 'images')
+    annotations_path = args.annotations_path
     labels_file = os.path.join(coco_dir, 'labels.npz')
 
     os.makedirs(images_dst_dir, exist_ok=True)

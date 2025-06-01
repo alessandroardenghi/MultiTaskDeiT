@@ -1,11 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
-from torchvision import datasets, transforms
-import models.model_registry
-import timm
-import os
+from torch.utils.data import DataLoader
 import numpy as np
 from dataset_functions.multitask_dataloader import MultiTaskDataset
 from munch import Munch

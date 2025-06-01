@@ -1,10 +1,7 @@
 from dataset_functions.multitask_dataloader import MultiTaskDataset
 import numpy as np
-from munch import Munch
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import torch
 import os
 from scipy.ndimage import gaussian_filter
@@ -52,7 +49,7 @@ def get_weight_matrix(W, Q):
     return N
 
 def main(weights_path = None):
-    lossdir = 'lossweights'
+    lossdir = 'coloring_weights'
     if not os.path.exists(lossdir):
         os.makedirs(lossdir)
 
