@@ -13,10 +13,17 @@ from loss import WeightedL1Loss, WeightedMSELoss
 from utils import AverageMeter, JigsawAccuracy
 from models.full_model import MultiTaskDeiT
 from multitask_training import train_model
-from utils import hamming_acc, freeze_components, recolor_images, load_partial_checkpoint, compute_jigsaw_acc
+from utils import multilabel_accuracy, multilabel_recall, multilabel_precision, multilabel_f1
+from utils import compute_perclass_f1, update_perclass_metrics, AverageMeter, JigsawAccuracy
+import json
+from utils import freeze_components
 from timm import create_model
 from logger import TrainingLogger
+
 #from torch.optim.lr_scheduler import OneCycleLR
+def move_to_device(munch_obj, device):
+    return Munch({k: v.to(device) if isinstance(v, torch.Tensor) else v
+                  for k, v in munch_obj.items()})
 
 import yaml
 from munch import Munch
@@ -25,8 +32,6 @@ def load_config(path):
     with open(path, 'r') as f:
         cfg = yaml.safe_load(f)
     return Munch.fromDict(cfg)
-
-
 
 def main():
     
@@ -95,7 +100,7 @@ def main():
         jigsaw_pos_topnaccuracy = acc_m_pos.get_scores()['topn_accuracy']
     except:
         jigsaw_pos_topnaccuracy = 0
-    igsaw_rot_accuracy = acc_m_rot.get_scores()['accuracy']
+    jigsaw_rot_accuracy = acc_m_rot.get_scores()['accuracy']
 
     print(f'Jigsaw position accuracy: {jigsaw_pos_accuracy:.4f}')
     print(f'Jigsaw position top3 accuracy: {jigsaw_pos_topnaccuracy:.4f}')

@@ -195,7 +195,11 @@ def hamming_acc(y_pred, y_true):
     #     total = y_true.size
     #     return correct / total
 
-def multilabel_recall(y_pred, y_true):
+def multilabel_recall(y_pred, y_true, mask=None):
+    if mask is not None:
+        y_pred = y_pred[:,mask]
+        y_true = y_true[:,mask]
+
     # Element-wise AND → only positions where both pred and label are 1
     correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
 
@@ -204,7 +208,11 @@ def multilabel_recall(y_pred, y_true):
 
     return correct_positives / total_positives if total_positives > 0 else 0, total_positives
 
-def multilabel_precision(y_pred, y_true):
+def multilabel_precision(y_pred, y_true, mask=None):
+    if mask is not None:
+        y_pred = y_pred[:,mask]
+        y_true = y_true[:,mask]
+
     # Element-wise AND → positions where both pred and label are 1
     correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
 
@@ -220,7 +228,11 @@ def multilabel_f1(prec, recal):
     else:
         return 2 * (prec * recal) / (prec + recal)
 
-def multilabel_accuracy(y_pred, y_true):
+def multilabel_accuracy(y_pred, y_true, mask=None):
+    if mask is not None:
+        y_pred = y_pred[:,mask]
+        y_true = y_true[:,mask]
+    
     # Compare predictions and labels element-wise → shape: (B, N)
     matches = (y_pred == y_true)
 
@@ -264,7 +276,7 @@ def compute_perclass_f1(tp, fp, fn):
     macro_f1 = f1.mean().item()
     return precision.tolist(), recall.tolist(), f1.tolist(), macro_f1
 
-def update_perclass_metrics(y_pred, y_true):
+def update_perclass_metrics(y_pred, y_true, mask=None):
     """
     Compute true positives, false positives, and false negatives for a batch.
     
@@ -275,6 +287,9 @@ def update_perclass_metrics(y_pred, y_true):
     Returns:
         A tuple of (true_positives, false_positives, false_negatives)
     """
+    if mask is not None:
+        y_pred = y_pred[:,mask]
+        y_true = y_true[:,mask]
     tp = ((y_pred == 1) & (y_true == 1)).sum(dim=0)
     fp = ((y_pred == 1) & (y_true == 0)).sum(dim=0)
     fn = ((y_pred == 0) & (y_true == 1)).sum(dim=0)

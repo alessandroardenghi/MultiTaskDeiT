@@ -79,10 +79,12 @@ def main():
     model.to(device)
     model.eval()
 
-
-    output_file = os.path.join('class_metrics', f'{cfg.experiment_name}.json')
-    if not os.path.exists('class_metrics'):
-        os.makedirs('class_metrics')
+    outdir = 'class_top_metrics'
+    output_file = os.path.join(outdir, f'{cfg.experiment_name}.json')
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    mask = [0,2,56,60,41,39,45,26,7,13,73,24,67,74,71,62,16,58,15,57]
+    mask.sort()
     threshold = 0.5
     accuracy = AverageMeter()
     rec_perimage = AverageMeter()
@@ -96,14 +98,14 @@ def main():
 
 
         class_outputs = (torch.sigmoid(out_logits) > threshold).int()
-        acc, total = multilabel_accuracy(class_outputs, labels.label_classification)
+        acc, total = multilabel_accuracy(class_outputs, labels.label_classification, mask=mask)
         accuracy.update(acc, total)
-        r, total = multilabel_recall(class_outputs, labels.label_classification)
-        p, total = multilabel_precision(class_outputs, labels.label_classification)
+        r, total = multilabel_recall(class_outputs, labels.label_classification, mask=mask)
+        p, total = multilabel_precision(class_outputs, labels.label_classification, mask=mask)
         rec_perimage.update(r, total)
         prec_perimage.update(p, total)
 
-        tp, fp, fn = update_perclass_metrics(class_outputs, labels.label_classification)
+        tp, fp, fn = update_perclass_metrics(class_outputs, labels.label_classification, mask=mask)
         if total_tp is None:
             total_tp = tp
             total_fp = fp
@@ -116,9 +118,14 @@ def main():
     f1_perimage = multilabel_f1(prec_perimage.avg, rec_perimage.avg)
     precision, recall, f1, avg_f1 = compute_perclass_f1(total_tp, total_fp, total_fn)
     # Build per-metric dicts
-    precision_dict = {i: precision[i] for i in range(len(precision))}
-    recall_dict = {i: recall[i] for i in range(len(recall))}
-    f1_dict = {i: f1[i] for i in range(len(f1))}
+    if mask is not None:
+        precision_dict = {cl: precision[i] for i, cl in enumerate(mask)}
+        recall_dict = {cl: recall[i] for i, cl in enumerate(mask)}
+        f1_dict = {cl: f1[i] for i, cl in enumerate(mask)}
+    else:
+        precision_dict = {i: precision[i] for i in range(len(precision))}
+        recall_dict = {i: recall[i] for i in range(len(recall))}
+        f1_dict = {i: f1[i] for i in range(len(f1))}
     # Sort each dict by value descending
     precision_sorted = dict(sorted(precision_dict.items(), key=lambda x: x[1], reverse=True))
     recall_sorted = dict(sorted(recall_dict.items(), key=lambda x: x[1], reverse=True))
