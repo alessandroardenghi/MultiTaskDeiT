@@ -14,7 +14,7 @@ logs
 annotations
 _coloring_models*
 _jigsaw_models*
-
+tests
 
 __pycache__/
 *.pyc
