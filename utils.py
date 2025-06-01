@@ -1,15 +1,25 @@
 import numpy as np
 import torch
 import random
-from munch import Munch
+import cv2
 import os
 import torch.nn as nn
 from timm import create_model
-import cv2
-#from dataset_functions.multitask_dataloader import MultiTaskDataset
-from torch.utils.data import DataLoader
-from PIL import Image
+import yaml
+from munch import Munch
 
+def move_to_device(munch_obj, device):
+    return Munch({k: v.to(device) if isinstance(v, torch.Tensor) else v
+                  for k, v in munch_obj.items()})
+
+def load_config(path):
+    with open(path, 'r') as f:
+        cfg = yaml.safe_load(f)
+    return Munch.fromDict(cfg)
+
+################################################################################################
+######## DATA UTILS ############################################################################
+################################################################################################
 
 def jigsaw_image(image : np.array, 
                  n: int, 
@@ -157,50 +167,31 @@ def jigsaw_batch(images: torch.Tensor, n_patches: int = 14):
 
     return transformed_images, pos_vectors, rot_vectors
 
-
-### TRAINING UTILS ###
-
-
-def hamming_acc(y_pred, y_true):
-    """
-    Compute the Hamming loss for multi-label classification. Measures the fraction 
-    of correctly predicted labels to the total number of labels.
-
-    Parameters:
-    - y_true (Tensor): Ground truth labels of shape [batch_size, num_labels].
-    - y_pred (Tensor): Predicted probabilities (after sigmoid) of shape [batch_size, num_labels].
-    - threshold (float): The threshold to convert probabilities to binary predictions (default 0.5).
-
-    Returns:
-    - hamming_loss (float): The Hamming loss for the batch.
-    """
-
-    assert y_true.shape == y_pred.shape, "Shapes of y_true and y_pred must match"
-    
-    #correct = (y_true == y_pred).sum().item()
-    correct = y_true == y_pred
-    correct = correct.sum()
-    correct = correct.item()
-    total =  y_true.numel()
-    
-    return correct / total, total
-
-    # if isinstance(y_true, torch.Tensor):
-    #     correct = (y_true == y_pred).float().sum()
-    #     total = torch.numel(y_true)
-    #     return (correct / total).item()
-
-    # else:  # assume numpy
-    #     correct = (y_true == y_pred).sum()
-    #     total = y_true.size
-    #     return correct / total
+################################################################################################
+######## METRICS UTILS ########################################################################
+################################################################################################
 
 def multilabel_recall(y_pred, y_true, mask=None):
+    """
+    Compute recall for multilabel classification. It computes the ratio of true positives 
+    to total ground truth positives. Useful for evaluating models on multilabel tasks becuase the number
+    of ones in a label vector is sparse (over 80 classes there are few objects per image).
+
+    It can be interpreted as the number of objects that are correctly predicted out of all objects 
+    that are present in the image.
+    Args:
+        y_pred: Tensor of shape (B, N), binary predictions (0 or 1).
+        y_true: Tensor of shape (B, N), binary ground truth labels (0 or 1).
+        mask: Optional mask to select specific classes.
+    Returns:
+        recall: Recall value (float).
+        total_positives: Total number of ground truth positives (int).
+    """
     if mask is not None:
         y_pred = y_pred[:,mask]
         y_true = y_true[:,mask]
 
-    # Element-wise AND → only positions where both pred and label are 1
+    # Element-wise AND -> only positions where both pred and label are 1
     correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
 
     # Total ground truth positives (i.e., how many 1s in labels)
@@ -209,11 +200,22 @@ def multilabel_recall(y_pred, y_true, mask=None):
     return correct_positives / total_positives if total_positives > 0 else 0, total_positives
 
 def multilabel_precision(y_pred, y_true, mask=None):
+    """
+    Compute precision for multilabel classification. It computes the ratio of true positives
+    to total predicted positives.
+    Args:
+        y_pred: Tensor of shape (B, N), binary predictions (0 or 1).
+        y_true: Tensor of shape (B, N), binary ground truth labels (0 or 1).
+        mask: Optional mask to select specific classes.
+    Returns:
+        precision: Precision value (float).
+        total_predicted: Total number of predicted positives (int).
+    """
     if mask is not None:
         y_pred = y_pred[:,mask]
         y_true = y_true[:,mask]
 
-    # Element-wise AND → positions where both pred and label are 1
+    # Element-wise AND -> positions where both pred and label are 1
     correct_positives = ((y_pred == 1) & (y_true == 1)).sum().item()
 
     # Total predicted positives (i.e., how many 1s in predictions)
@@ -222,27 +224,42 @@ def multilabel_precision(y_pred, y_true, mask=None):
     return correct_positives / total_predicted if total_predicted > 0 else 0, total_predicted
 
 def multilabel_f1(prec, recal):
-    # F1 = 2 * (precision * recall) / (precision + recall)
+    """
+    Compute F1 score from precision and recall.
+    Args:
+        prec: Precision value
+        recal: Recall value
+    Returns:
+        F1 = 2 * (prec * recal) / (prec + recal)
+    """
     if prec + recal == 0:
         return 0
     else:
         return 2 * (prec * recal) / (prec + recal)
 
 def multilabel_accuracy(y_pred, y_true, mask=None):
+    """
+    Compute accuracy for multilabel classification.
+    Args:
+        y_pred: Tensor of shape (B, N), binary predictions (0 or 1).
+        y_true: Tensor of shape (B, N), binary ground truth labels (0 or 1).
+        mask: Optional mask to select specific classes.
+    Returns:
+        accuracy: Accuracy value (float).
+        total_samples: Total number of samples processed.
+    """
     if mask is not None:
         y_pred = y_pred[:,mask]
         y_true = y_true[:,mask]
     
-    # Compare predictions and labels element-wise → shape: (B, N)
+    # Compare predictions and labels element-wise -> shape: (B, N)
     matches = (y_pred == y_true)
 
-    # For each vector, check if all elements match → shape: (B,)
+    # For each vector, check if all elements match -> shape: (B,)
     exact_matches = matches.all(dim=1)
-
-    # Convert boolean tensor to float and average
     accuracy = exact_matches.float().mean().item()
 
-    return accuracy, y_pred.shape[0]  # Return accuracy and batch size
+    return accuracy, y_pred.shape[0]
 
 def compute_micro_precision_recall_f1(total_tp, total_fp, total_fn):
     """
@@ -252,7 +269,6 @@ def compute_micro_precision_recall_f1(total_tp, total_fp, total_fn):
         total_tp: Total true positives across batches
         total_fp: Total false positives across batches
         total_fn: Total false negatives across batches
-    
     Returns:
         precision, recall, f1_score
     """
@@ -267,6 +283,18 @@ def compute_micro_precision_recall_f1(total_tp, total_fp, total_fn):
     return precision, recall, f1
 
 def compute_perclass_f1(tp, fp, fn):
+    """
+    Compute per-class precision, recall, and F1 score.
+    Args:
+        tp: Tensor of shape (N,) - true positives for each class
+        fp: Tensor of shape (N,) - false positives for each class
+        fn: Tensor of shape (N,) - false negatives for each class
+    Returns:
+        precision: List of precision values for each class
+        recall: List of recall values for each class
+        f1: List of F1 scores for each class
+        macro_f1: Macro-averaged F1 score
+    """
     epsilon = 1e-8  # for numerical stability
 
     precision = tp / (tp + fp + epsilon)
@@ -296,31 +324,11 @@ def update_perclass_metrics(y_pred, y_true, mask=None):
 
     return tp, fp, fn
 
-def save_model(model, path=None, name = None):
-    """
-    Save the model to a specified path.
-    Parameters:
-    - model (nn.Module): The model to be saved.
-    - path (str): Path to save the model.
-    Returns:
-    - None
-    """
-    if name is None:
-        name = model.__class__.__name__
-    
-    if path is None:
-        path = f"{name}.pth"
-    else:
-        if not os.path.exists(path):
-            os.makedirs(path)
-        path = path + f"/{name}.pth"
-
-    torch.save(model.state_dict(), path)
-    print(f"Model saved to {path}")
-
-
 class AverageMeter:
-    """Computes and stores the average and current value"""
+    """
+    Computes and stores the sum, count, average and current value.
+    This is useful for tracking metrics during training or evaluation.
+    """
 
     def __init__(self):
         self.reset()
@@ -338,8 +346,15 @@ class AverageMeter:
         self.avg = self.sum / self.count  # Running average
 
 class JigsawAccuracy:
+    """
+    Computes the accuracy of jigsaw predictions.
+    This class tracks the total number of patches, correct predictions, and top-n accuracy.
+    It can be used to evaluate the performance of a model on jigsaw tasks.
+    Attributes:
+        n (int): The number of top predictions to consider for accuracy. Top-1 accuracy is returned by default always.
+                 If n > 1, top-n accuracy is also computed, otherwise only top-1 accuracy is computed.
+    """
     def __init__(self, n = 1):
-        #self.num_classes = num_classes
         self.n = n
         self.reset()
 
@@ -369,7 +384,6 @@ class JigsawAccuracy:
             match = (topn_pred == gt.unsqueeze(-1)).any(dim=-1)
             self.top_n += match.sum().item()
 
-
     def get_scores(self):
         total = self.total_patches
         try: 
@@ -388,7 +402,9 @@ class JigsawAccuracy:
             'accuracy': acc,
         }
 
-
+################################################################################################
+######## MODELS UTILS ##########################################################################
+################################################################################################
 
 def freeze_submodule(model, submodule_name, freeze=True):
         """
@@ -456,32 +472,6 @@ def freeze_components(model, component_names, freeze=True, verbose=False):
             else:
                 print(f"[Warning] '{name}' not found as submodule or parameter")
         print('='*100)
-            
-import cv2
-import numpy as np
-
-def recolor_image(L, ab):
-    # Ensure L and ab are properly formatted
-    L_denorm = L[0].numpy() * 255.0  # Shape: [H, W], denormalize L channel
-    ab_denorm = (ab.numpy() * 127.0) + 128    # Shape: [2, H, W], denormalize a/b channels
-    
-    # Ensure L and ab are in valid range
-    L_denorm = np.clip(L_denorm, 0, 255)
-    ab_denorm = np.clip(ab_denorm, 0, 255)
-
-    # Stack L and ab channels to get LAB image
-    # ab_denorm is [2, H, W], we need to transpose it so it becomes [H, W, 2]
-    ab_denorm = np.transpose(ab_denorm, (1, 2, 0))  # Shape: [H, W, 2]
-    # Stack L channel and ab channels to form LAB image (Shape: [H, W, 3])
-    lab_denorm = np.concatenate([L_denorm[..., np.newaxis], ab_denorm], axis=-1)  # Shape: [H, W, 3]
-    
-    # Convert LAB to RGB using OpenCV
-    rgb_reconstructed = cv2.cvtColor(lab_denorm.astype(np.uint8), cv2.COLOR_LAB2RGB)
-
-    # Clip the result to ensure it is in the valid range [0, 255]
-    rgb_reconstructed = np.clip(rgb_reconstructed, 0, 255).astype(np.uint8)
-
-    return rgb_reconstructed
 
 
 def load_partial_checkpoint(model, checkpoint_path, verbose=False):
@@ -576,60 +566,6 @@ def load_pretrained_weights(model, old_model_info, img_size, verbose=False):
         print(f"Identical blocks ({len(identical_layers)}): {identical_layers}")
         print(f"Not updated blocks ({len(not_updated_layers)}): {not_updated_layers}")
         print('='*100)
-        
-def jigsaw_prediction(pred):
-    """
-    pred: Tensor of shape (B, C, C) — softmax probabilities per row
-    returns: Tensor of shape (B, C) — unique predictions per row
-    """
-    softmax = torch.nn.Softmax(dim=-1)
-    pred = softmax(pred)
-    B, C, _ = pred.shape
-    device = pred.device
-    predictions = torch.full((B, C), -1, dtype=torch.long, device=device)
-    assigned = torch.zeros((B, C), dtype=torch.bool, device=device)
-
-    for i in range(C):
-        mask = assigned.unsqueeze(1).expand(-1, C, -1)  # (B, C, C)
-        masked_pred = pred.masked_fill(mask, -1) # fill of -1 the values of pred indexed by mask
-
-        # Get max per row: find index of highest value in each row
-        values, indices = masked_pred.max(dim=2)  # (B, C) each entry indices[b, c] is the column index with the maximum value in pred[b, c, :]
-
-        # For each batch, pick the row with the highest of these max values
-        _, row_indices = values.max(dim=1)  # (B,), (B,) each entry row_indices[b] is the index c 
-                                            # of the row in batch b that had the highest max value 
-                                            # (most confident prediction among rows that haven’t been used yet)
-        col_indices = indices[torch.arange(B), row_indices]  # (B,)
-
-        # Store predictions: batch b, row r → col
-        predictions[torch.arange(B), row_indices] = col_indices
-        # Update assigned columns
-        assigned[torch.arange(B), col_indices] = True
-        # Mask out the selected row so it won't be picked again
-        pred[torch.arange(B), row_indices, :] = -1
-
-    return predictions
-
-def compute_jigsaw_acc(model, loader):
-    total_patches = 0
-    correct = 0
-    model.eval()
-    for batch_idx, (imgs, labels) in enumerate(loader):
-        # imgs.image_jigsaw: (B, C, H, W)
-        outputs = model(imgs)
-        reordered_predictions = jigsaw_prediction(outputs.pred_jigsaw_pos)
-        
-        B, P, _ = outputs.pred_jigsaw_pos.shape
-        total_patches += B
-
-        # Top-1 predictions
-        #pos_top1 = outputs.pred_jigsaw_pos.argmax(dim=-1)
-        pos_top1 = reordered_predictions
-        # Count how many samples in the batch have all positions correct (vector match)
-        correct_current = ((pos_top1 == labels.pos_vec).all(dim=1)).sum().item()
-        correct += correct_current
-    return correct/total_patches
 
 def simple_combine_losses(losses, active_heads):
     """ 
@@ -648,3 +584,70 @@ def simple_combine_losses(losses, active_heads):
     gamma = 0.05
     combined_loss = alpha * losses[0] + beta * losses[1] + gamma * losses[2]
     return combined_loss
+
+################################################################################################
+######## RECONSTRUCTION UTILS ##################################################################
+################################################################################################
+
+def recolor_image(L, ab):
+    # Ensure L and ab are properly formatted
+    L_denorm = L[0].numpy() * 255.0  # Shape: [H, W], denormalize L channel
+    ab_denorm = (ab.numpy() * 127.0) + 128    # Shape: [2, H, W], denormalize a/b channels
+    
+    # Ensure L and ab are in valid range
+    L_denorm = np.clip(L_denorm, 0, 255)
+    ab_denorm = np.clip(ab_denorm, 0, 255)
+
+    # Stack L and ab channels to get LAB image
+    # ab_denorm is [2, H, W], we need to transpose it so it becomes [H, W, 2]
+    ab_denorm = np.transpose(ab_denorm, (1, 2, 0))  # Shape: [H, W, 2]
+    # Stack L channel and ab channels to form LAB image (Shape: [H, W, 3])
+    lab_denorm = np.concatenate([L_denorm[..., np.newaxis], ab_denorm], axis=-1)  # Shape: [H, W, 3]
+    
+    # Convert LAB to RGB using OpenCV
+    rgb_reconstructed = cv2.cvtColor(lab_denorm.astype(np.uint8), cv2.COLOR_LAB2RGB)
+
+    # Clip the result to ensure it is in the valid range [0, 255]
+    rgb_reconstructed = np.clip(rgb_reconstructed, 0, 255).astype(np.uint8)
+
+    return rgb_reconstructed
+        
+def jigsaw_prediction(pred):
+    """
+    Reorder jigsaw predictions to get unique predictions per each patch position. It uses a greedy algorithm 
+    to select the most confident patch predictions for each image, ensuring that each patch is used only once.
+    Args:
+        pred: Tensor of shape (B, C, C) — softmax probabilities per image per patch
+    returns: 
+        predictions: Tensor of shape (B, C) — unique predictions per image (reconstructed patch positions)
+    """
+    softmax = torch.nn.Softmax(dim=-1)
+    pred = softmax(pred)
+    B, C, _ = pred.shape
+    device = pred.device
+    predictions = torch.full((B, C), -1, dtype=torch.long, device=device)
+    assigned = torch.zeros((B, C), dtype=torch.bool, device=device)
+
+    for i in range(C):
+        mask = assigned.unsqueeze(1).expand(-1, C, -1)  # (B, C, C)
+        masked_pred = pred.masked_fill(mask, -1) # fill of -1 the values of pred indexed by mask
+
+        # Get max per images: in each image find index of highest value for each patch (row)
+        values, indices = masked_pred.max(dim=2)  # (B, C) each entry indices[b, c] is the patch index 
+                                                  # with the maximum value in pred[b, c, :]
+
+        # For each image, pick the patch with the highest of these max values
+        _, row_indices = values.max(dim=1)  # (B,), (B,) each entry row_indices[b] is the index c 
+                                            # of the patch in image b that had the highest max value 
+                                            # (most confident prediction among patches that haven’t been used yet)
+        col_indices = indices[torch.arange(B), row_indices]  # (B,)
+
+        # Store predictions
+        predictions[torch.arange(B), row_indices] = col_indices
+        # Update assigned columns
+        assigned[torch.arange(B), col_indices] = True
+        # Mask out the selected row so it won't be picked again
+        pred[torch.arange(B), row_indices, :] = -1
+
+    return predictions
+
