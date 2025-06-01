@@ -1,9 +1,7 @@
 # Remaining Tasks:
 ## CODING TASKS
-- Writing Scripts to automatically download data with support for pretained data
 - Uploading pretrained weights and txt files
 - Writing code to do full reconstruction
-- cleaning utils 
 - writing readme
 - overall cleaning each file (imports to clean)
 - merge everything into main

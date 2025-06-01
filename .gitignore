@@ -18,6 +18,8 @@ coco_colors
 *temp*
 _err
 _out
+pascal_data
+
 
 __pycache__/
 *.pyc
