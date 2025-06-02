@@ -90,6 +90,8 @@ Choose one of the following options (the following scripts will download, prepro
    -  [MultiTaskDeiT Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0/MultiTaskDeiT.pth)
    -  [Single-Head Colorization Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0.0/coloring_single_head.pth)
    -  [Single-Head Jigsaw Reconstruction Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0.1/jigsaw_3x3_single_head.pth)
+   -  [Single-Head Classification Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0.2/classification_single_head.pth)
+
 
 
 **Train, Test Splits:** 
