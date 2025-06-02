@@ -1,11 +1,4 @@
 # Remaining Tasks:
-## CODING TASKS
-- Uploading pretrained weights and txt files
-- Writing code to do full reconstruction
-- writing readme
-- overall cleaning each file (imports to clean)
-- merge everything into main
-
 ## REPORT TASKS
 - generare loss graphs (if any)
 - select images to import in the model
@@ -19,7 +12,8 @@ A comparative framework evaluating single-task versus three-task joint training 
 
 ## Table of Contents 
 - [Introduction](#introduction) 
-- [Paper](#paper) - [Installation](#installation) 
+- [Paper](#paper) 
+- [Installation](#installation) 
 - [Prerequisites](#prerequisites) 
 - [Conda Environment Setup](#conda-environment-setup) 
 - [Dataset & Pretrained Models](#dataset--pretrained-models) 
@@ -27,8 +21,6 @@ A comparative framework evaluating single-task versus three-task joint training 
 - [Training](#training) 
 - [Inference](#inference) 
 - [Results](#results) 
-- [Citation](#citation) 
-- [License](#license) 
 
 ## Introduction (TO DO)
 
@@ -40,11 +32,10 @@ A brief overview of the project, its goals, and key contributions. You can menti
 If your project is associated with a publication, link it here: 
 
 
-**Title:** [INSERT PAPER TITLE HERE](INSERT_PAPER_URL_HERE) 
-**Authors:** First Author, Second Author, … 
-**Conference/Journal:** Venue Name, Year 
-&gt; **Abstract (optional):** 
-&gt; A concise abstract or summary of the paper. 
+**Title:** [Self-Supervision through Image Reconstruction: Can Multitask Training Enhance
+Feature Representation?](INSERT_PAPER_URL_HERE) 
+**Authors:** Ardenghi Alessandro, Giampetruzzi Rocco Cristiano   
+**Abstract:** A concise abstract or summary of the paper. 
 
 ## Installation 
 ### Prerequisites 
@@ -57,40 +48,95 @@ If your project is associated with a publication, link it here:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/alessandroardenghi/SolvingJigsawPuzzles.git
-   cd SolvingJigsawPuzzles 
+   git clone https://github.com/alessandroardenghi/MultiTaskDeiT.git
+   cd MultiTaskDeiT
    ```
-2. Create a new conda environment: ```bash conda create -n project-env python=3.9 -y ``` 
-3. Activate the environment: ```bash conda activate project-env ``` 
-4. Install required packages: ```bash conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch # Example for PyTorch pip install -r requirements.txt ``` 
+2. Create a new conda environment: 
 
-&gt; **Note:** Adjust the CUDA version and package manager flags as needed. 
+    ```bash 
+    conda env create -f requirements/environment.yml
+    ``` 
 
-5. Verify installation: ```bash python -c "import torch; print('CUDA available:', torch.cuda.is_available())" ```
+3. Activate the environment: 
+    
+    ```bash 
+    conda activate MultiTaskDeiT
+    ``` 
+
+4. Install required packages:  
+Choose one of the following based on your system:
+- Option 1: CPU-only (recommended for machines without a GPU)
+    ```bash 
+    pip install -r requirements/requirements_cpu.txt
+    ``` 
+- Option 2: GPU (requires compatible NVIDIA GPU + CUDA drivers)
+    ```bash 
+    pip install -r requirements/requirements_gpu.txt
+    ``` 
 --- 
 ## Dataset & Pretrained Models 
-- **Dataset Links:** 
-- Download link for training data: [INSERT DATA LINK HERE] 
-- Instructions for preprocessing (if applicable) 
-- **Pretrained Weights:** 
-- Download link for pretrained model weights: [INSERT PRETRAINED WEIGHTS LINK HERE] 
-- MD5/SHA256 checksums (optional): ``` pretrained_model.pth MD5: <insert_md5_here> ``` 
-- **Directory Structure (after download/unpacking):** ``` project-name/ ├── data/ │ ├── train/ │ ├── val/ │ └── test/ ├── pretrained_models/ │ └── pretrained_model.pth └── ... ``` 
+**Dataset Links:**  
+Choose one of the following options (the following scripts will download, preprocess and split into train/val/test the chosen dataset):
+- Option 1: PascalVOC Dataset
+    ```bash 
+    ./dataset_preprocessing_functions/preprocess_pascal.sh
+    ``` 
+- Option 2: PascalVOC Dataset
+    ```bash 
+    ./dataset_preprocessing_functions/preprocess_coco.sh
+    ``` 
+**Pretrained Weights:** 
+- Download link for pretrained model weights: [INSERT PRETRAINED WEIGHTS LINK HERE]  
+
+**Train, Test Splits:** 
+- Download link for the train, val, test splits used in our evaluation: [INSERT PRETRAINED WEIGHTS LINK HERE].<br>
+After downloading, manually substitute them to the newly generated ones in the data directory.
+
+**Directory Structure (example with PascalVOC):** 
+``` 
+MultiTaskDeit/
+├── pascal_data/
+│   ├── images/
+│   ├── labels.npz
+│   ├── test.txt
+│   ├── train.txt
+│   └── val.txt
+├── pretrained_models/  # OPTIONAL
+│   ├── classification_single_head.pth
+│   ├── coloring_single_head.pth
+│   ├── jigsaw_3x3_single_head.pth
+│   └── MultiTaskDeiT.pth
+...
+``` 
 --- 
 ## Usage ### 
-Training 
-1. Configure training settings in `configs/train_config.yaml` (or specify hyperparameters via command line): ```yaml # Example YAML entries model: name: MyModel backbone: resnet50 training: batch_size: 32 lr: 0.001 num_epochs: 100 save_checkpoint: true ``` 
-2. Run training script: ```bash python train.py \ --config configs/train_config.yaml \ --data_dir data/ \ --output_dir outputs/ \ --device cuda:0 ``` 
-&gt; **Optional arguments:** 
-&gt; `--resume <checkpoint_path>` to resume training from a checkpoint. 
-&gt; `--seed <int>` to set a random seed for reproducibility. 
-3. Logs and checkpoints will be saved in `outputs/`. Monitor training via TensorBoard: ```bash tensorboard --logdir outputs/logs/ ``` 
+### Training Single-Head Models
+1. Configure training settings in `configs/train/config.yaml`
+2. Run training script: ```python3 train.py```
+3. Logs and checkpoints will be saved in `logs/{experiment_name}`.
 --- 
-### Inference 
-1. Prepare the inference configuration in `configs/infer_config.yaml`: ```yaml # Example YAML entries model: checkpoint: pretrained_models/pretrained_model.pth inference: batch_size: 16 input_size: 224 ``` 
+### Training MultiTaskDeiT (3-head model)
+1. Configure training settings in `configs/train/config_multi.yaml`
+2. Run training script: ```python3 train_multi.py```
+3. Logs and checkpoints will be saved in `logs/{experiment_name}`.
+--- 
+### Inference Classification
+1. Configure classification inference settings in `configs/eval/configs/eval/config_class.yaml`
 
-2. Run inference script: ```bash python infer.py \ --config configs/infer_config.yaml \ --data_dir data/test/ \ --output_dir outputs/inference/ \ --device cuda:0 ``` 
-3. Output predictions will be saved to `outputs/inference/`. You can post-process results, e.g., converting logits to labels: ```bash python postprocess.py \ --predictions outputs/inference/preds.npy \ --labels outputs/inference/labels.txt ``` 
+2. Run inference script: ```python3 eval_class.py``` 
+3. Output predictions will be saved to `model_results/class_top_metrics/{experiment_name}` 
+--- 
+### Inference Jigsaw Reconstruction
+1. Configure jigsaw inference settings in `configs/eval/configs/eval/config_jigsaw.yaml`
+
+2. Run inference script: ```python3 eval_jigsaw.py``` 
+3. Output predictions will be saved to `model_results/jigsaw_metrics/{experiment_name}` 
+--- 
+### Inference Colorization
+1. Configure colorization inference settings in `configs/eval/configs/eval/config_coloring.yaml`
+
+2. Run inference script: ```python3 eval_coloring.py``` 
+3. Colorized images will be saved to `model_results/coloring_results/{experiment_name}` 
 --- 
 ## Results 
 | Model | Dataset | Top-1 Accuracy | Top-5 Accuracy | mAP | Comments | 
@@ -99,13 +145,4 @@ Training
 | **Our Proposed 🏆** | Dataset A | **78.45%** | **94.03%** | **0.703**| + Data augmentation | 
 | Our Method (Variant)| Dataset A | 77.18% | 93.10% | 0.689 | Different hyperparams | 
 | ... | ... | ... | ... | ... | ... | 
-&gt; **Notes:** 
-&gt; 
-- Fill in this table with your own experimental results. 
-&gt; 
-- Add or remove columns as necessary (e.g., Precision, Recall, F1-score, etc.). 
-&gt; 
-- You can also include validation curves or example qualitative results (images) below.
 --- 
-## Citation 
-If you find this code useful for your research, please cite our paper: ```bibtex @inproceedings{Author2025ProjectName, title = {Project Name: A Novel Approach to XYZ}, author = {First Author and Second Author and Third Author}, booktitle = {Proceedings of Conference Name}, year = {2025}, pages = {123--134}, doi = {10.xxxx/xxxxxxx} } ``` --- ## License Specify your license here. For example: ``` MIT License Copyright (c) 2025 Name Permission is hereby granted, free of charge, to any person obtaining a copy ... ``` 
