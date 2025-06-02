@@ -87,7 +87,8 @@ Choose one of the following options (the following scripts will download, prepro
     ``` 
 **Pretrained Weights:** 
 - Download link for pretrained model weights:
-   -  [MultiTaskDeiT Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0/MultiTaskDeiT.pth) 
+   -  [MultiTaskDeiT Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0/MultiTaskDeiT.pth)
+   -  [Single-Head Colorization Model Weights](https://github.com/alessandroardenghi/MultiTaskDeiT/releases/download/v1.0.0/coloring_single_head.pth))
 
 **Train, Test Splits:** 
 - The train, val and test splits used to train and evaluate the pretrained models on COCO are provieded in the __precomputed_splits__ directory. To replicate our experimental results, substitute the newly generated train.txt, test.txt, val.txt with the ones present in the __precomputed_splits__ directory.
