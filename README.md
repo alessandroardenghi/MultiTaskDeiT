@@ -1,6 +1,10 @@
 # Remaining Tasks:
 ## REPORT TASKS
-- generare loss graphs (if any)
+- Grafici: model architecture, results, colorization results (best and worst)?
+- Describe coloring loss
+- classification metrics (aggiungere)
+- Results da aggiungere. Aggiungere tables di results e coi parametri
+- Abstract
 - select images to import in the model
 - improve conclusions
 - make report shorter
