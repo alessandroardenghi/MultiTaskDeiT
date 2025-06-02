@@ -12,7 +12,8 @@ A comparative framework evaluating single-task versus three-task joint training 
 
 ## Table of Contents 
 - [Introduction](#introduction) 
-- [Paper](#paper) - [Installation](#installation) 
+- [Paper](#paper) 
+- [Installation](#installation) 
 - [Prerequisites](#prerequisites) 
 - [Conda Environment Setup](#conda-environment-setup) 
 - [Dataset & Pretrained Models](#dataset--pretrained-models) 
@@ -20,8 +21,6 @@ A comparative framework evaluating single-task versus three-task joint training 
 - [Training](#training) 
 - [Inference](#inference) 
 - [Results](#results) 
-- [Citation](#citation) 
-- [License](#license) 
 
 ## Introduction (TO DO)
 
