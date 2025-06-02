@@ -1,0 +1,64 @@
+model_name: 'MultiTaskDeiT_patch16_tiny_3_models'
+experiment_name: 'joint_240_3by3_upsampling_multilabels'
+data_path: 'coco_colors'
+verbose: true
+img_size: 240
+batch_size: 32
+epochs: 200
+lr : 0.001 # 0.0001 when backbone unfrozen, 0.001 when backbone frozen
+weights: 'lossweights/weights_25_bins_sigma_3_coco.npy'
+n_workers: 16
+
+active_heads:
+    classification: true
+    coloring: true
+    jigsaw: true
+
+pretrained_info1:
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: 'logs/jigsaw_240_3by3_clstokens_frozen_50epochs/checkpoints/best_model.pth' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+
+pretrained_info2:
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: 'logs/coloring_240_upsampling_frozen_MSE_20250515_0852/checkpoints/checkpoint.pth'
+
+pretrained_info3:
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: 'logs/classification_multilabels_240_frozen_20250520_1955/checkpoints/best_model.pth'
+
+pixel_shuffle_cfg:
+    do: false
+    steps: 1
+    smoothing: false
+
+jigsaw_cfg:
+    use_cls_embeds: true
+    n_jigsaw_patches: 3
+
+classification_cfg:
+    n_classes: 80
+
+freeze_modules:
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
+
+unfreeze_modules:
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
+
+
+
