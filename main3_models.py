@@ -22,7 +22,7 @@ from utils import *
 
 def main():
     
-    cfg = load_config('config3_models.yaml')        # cfg dict with all attributes inside
+    cfg = load_config('configs/training/config3_models.yaml')        # cfg dict with all attributes inside
     logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config3_models.yaml')
 
@@ -105,8 +105,6 @@ def main():
             div_factor=25.0,  # initial LR = max_lr / div_factor
             final_div_factor=1e4,  # end LR = max_lr / final_div_factor
         )
-
-    #combine_losses = lambda x,y: x.sum()
 
     #print(f"Training with active heads: {' '.join(active_heads)}")
     print('='*100)
