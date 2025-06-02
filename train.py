@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from dataset_functions.multitask_dataloader import MultiTaskDataset
+from engine.multitask_dataloader import MultiTaskDataset
 
 import torch.optim as optim
 from timm import create_model
@@ -22,7 +22,7 @@ from functions.utils import *
 
 def main():
     
-    cfg = load_config('configs/training/config.yaml')        # cfg dict with all attributes inside
+    cfg = load_config('configs/train/config.yaml')        # cfg dict with all attributes inside
     logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config.yaml')
 
