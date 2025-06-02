@@ -65,9 +65,9 @@ def main():
                          pixel_shuffle_cfg = cfg.pixel_shuffle_cfg,
                          verbose = cfg.verbose,
                          pretrained_model_info = cfg.pretrained_info)
-    
+    output_dir = os.path.join('coloring_results', cfg.output_dir)
     recolor_images(data_path=cfg.data_path, 
-                   output_dir=cfg.output_dir, 
+                   output_dir=output_dir, 
                    split='test', model=model, 
                    n_images=cfg.n_images, 
                    shuffle=cfg.shuffle, 
