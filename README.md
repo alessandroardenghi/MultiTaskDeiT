@@ -4,7 +4,6 @@
 - Describe coloring loss
 - classification metrics (aggiungere)
 - Results da aggiungere. Aggiungere tables di results e coi parametri
-- Abstract
 - select images to import in the model
 - improve conclusions
 - make report shorter
@@ -31,10 +30,16 @@ A comparative framework evaluating single-task versus three-task joint training 
 Previous papers found that adding self-supervised tasks to the training of classifier models improved the feature representation capabilities of the model itself, in turn improving the classification results.
 The objective of this project is therefore to investigate the effects of training a model to perform classification, while also learning to perform Jigsaw Reconstruction and Image Colorization. 
 
-## Paper (TO DO)
+## Paper 
 **Title:** Self-Supervision through Image Reconstruction: Can Multitask Training Enhance Feature Representation?
 **Authors:** Ardenghi Alessandro, Giampetruzzi Rocco Cristiano <br>
-**Abstract:** A concise abstract or summary of the paper.
+**Abstract:** <br>
+In this paper, we investigate the effect of multi-task learning on the feature-representation capabilities of a Vision Transformer. <br>
+We propose a model composed of a Vision Transformer backbone and three specialized heads, trained simultaneously to reconstruct jigsaw-puzzled grayscale images, classify their reconstructed versions, and colorize them. <br>
+This setup is designed to encourage the model to learn high-level semantic features via puzzle solving and classification, while also capturing fine-grained pixel-level details through the coloring task. <br>
+We hypothesize that this synergy could lead to more robust and generalizable latent image representations. <br>
+Experiments conducted on the COCO and Pascal VOC datasets show that our multi-task approach achieves results comparable to training the tasks separately, with no significant performance gains. <br>
+While these findings suggest that multi-task learning does not inherently improve performance in this context, we identify several design choices that may have limited the model’s effectiveness and outline directions for future improvements.
 
 ## Installation 
 ### Prerequisites 
