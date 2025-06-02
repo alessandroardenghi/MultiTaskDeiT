@@ -22,20 +22,15 @@ A comparative framework evaluating single-task versus three-task joint training 
 - [Inference](#inference) 
 - [Results](#results) 
 
-## Introduction (TO DO)
+## Introduction
 
-A brief overview of the project, its goals, and key contributions. You can mention high-level ideas, why your approach is novel, and what tasks or datasets it addresses. 
-
+Previous papers found that adding self-supervised tasks to the training of classifier models improved the feature representation capabilities of the model itself, in turn improving the classification results.
+The objective of this project is therefore to investigate the effects of training a model to perform classification, while also learning to perform Jigsaw Reconstruction and Image Colorization. 
 
 ## Paper (TO DO)
-
-If your project is associated with a publication, link it here: 
-
-
-**Title:** [Self-Supervision through Image Reconstruction: Can Multitask Training Enhance
-Feature Representation?](INSERT_PAPER_URL_HERE) 
-**Authors:** Ardenghi Alessandro, Giampetruzzi Rocco Cristiano   
-**Abstract:** A concise abstract or summary of the paper. 
+**Title:** Self-Supervision through Image Reconstruction: Can Multitask Training Enhance Feature Representation?
+**Authors:** Ardenghi Alessandro, Giampetruzzi Rocco Cristiano <br>
+**Abstract:** A concise abstract or summary of the paper.
 
 ## Installation 
 ### Prerequisites 
