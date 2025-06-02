@@ -1,9 +1,5 @@
 #!/bin/bash
 
-source /home/3144656/miniconda3/bin/activate
-
-conda activate jigsaw
-
 python3 'dataset_preprocessing_functions/COCO/download_coco.py'
 
 rm -rf coco_data/annotations_trainval2014.zip
