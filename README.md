@@ -102,6 +102,10 @@ MultiTaskDeit/
 │   ├── train.txt
 │   └── val.txt
 ├── pretrained_models/  # OPTIONAL
+│   ├── classification_single_head.pth
+│   ├── coloring_single_head.pth
+│   ├── jigsaw_3x3_single_head.pth
+│   └── MultiTaskDeiT.pth
 ...
 ``` 
 --- 
@@ -120,19 +124,19 @@ MultiTaskDeit/
 1. Configure classification inference settings in `configs/eval/configs/eval/config_class.yaml`
 
 2. Run inference script: ```python3 eval_class.py``` 
-3. Output predictions will be saved to `class_top_metrics/{experiment_name}` 
+3. Output predictions will be saved to `model_results/class_top_metrics/{experiment_name}` 
 --- 
 ### Inference Jigsaw Reconstruction
 1. Configure jigsaw inference settings in `configs/eval/configs/eval/config_jigsaw.yaml`
 
 2. Run inference script: ```python3 eval_jigsaw.py``` 
-3. Output predictions will be saved to `jigsaw_metrics/{experiment_name}` 
+3. Output predictions will be saved to `model_results/jigsaw_metrics/{experiment_name}` 
 --- 
 ### Inference Colorization
 1. Configure colorization inference settings in `configs/eval/configs/eval/config_coloring.yaml`
 
 2. Run inference script: ```python3 eval_coloring.py``` 
-3. Colorized images will be saved to `coloring_results/{experiment_name}` 
+3. Colorized images will be saved to `model_results/coloring_results/{experiment_name}` 
 --- 
 ## Results 
 | Model | Dataset | Top-1 Accuracy | Top-5 Accuracy | mAP | Comments | 
