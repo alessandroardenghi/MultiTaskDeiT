@@ -4,7 +4,7 @@ verbose: true
 output_dir: 'classification_test_1'
 pretrained_info:
     checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
-    link: '' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+    link: 'pretrained_models/classification_multilabels_240/checkpoint.pth' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
 
 n_workers: 16
 shuffle: false

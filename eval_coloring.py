@@ -35,7 +35,8 @@ def recolor_image(L, ab):
     return rgb_reconstructed
 
 def recolor_images(data_path, output_dir, split, model, n_images, img_size, shuffle=False):
-    os.makedirs(output_dir, exist_ok=True)
+    outdir = os.path.join('model_results', output_dir)
+    os.makedirs(outdir, exist_ok=True)
     dataset = MultiTaskDataset(data_path, split=split, img_size=img_size, do_coloring=True)
     loader = DataLoader(dataset, batch_size=1, shuffle=shuffle)
     for i, (images, labels) in enumerate(loader):
@@ -47,7 +48,7 @@ def recolor_images(data_path, output_dir, split, model, n_images, img_size, shuf
         # Assuming images.original_image[0] is a torch.Tensor
         colored_img = recolor_image(images.image_colorization[0].detach(), output.pred_coloring[0].detach())
         colored_img = Image.fromarray(colored_img)
-        colored_img.save(os.path.join(output_dir,f'image{i}.jpg'))
+        colored_img.save(os.path.join(outdir,f'image{i}.jpg'))
 
 
 def main():
@@ -57,7 +58,7 @@ def main():
     model = create_model(cfg.model_name, 
                          img_size = cfg.img_size,
                          do_jigsaw = False, 
-                         pretrained = False,            # TO BE SUBSTITUTED WITH TRUE!
+                         pretrained = True,            # TO BE SUBSTITUTED WITH TRUE!
                          n_classes = 80,
                          do_classification = False, 
                          do_coloring = True, 

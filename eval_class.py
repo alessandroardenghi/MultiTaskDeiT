@@ -64,8 +64,10 @@ def main():
     model.to(device)
     model.eval()
 
-    outdir = 'class_top_metrics'
-    output_file = os.path.join(outdir, f'{cfg.experiment_name}.json')
+    parentdir = 'model_results'
+    classdir = 'class_metrics'
+    outdir = os.path.join(parentdir, classdir)
+    output_file = os.path.join(outdir, f'{cfg.output_dir}.json')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
