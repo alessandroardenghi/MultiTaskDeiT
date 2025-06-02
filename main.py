@@ -22,7 +22,7 @@ from utils import *
 
 def main():
     
-    cfg = load_config('config.yaml')        # cfg dict with all attributes inside
+    cfg = load_config('configs/training/config.yaml')        # cfg dict with all attributes inside
     logger = TrainingLogger(experiment_name=cfg.experiment_name)
     logger.save_config(cfg, filename='config.yaml')
 
