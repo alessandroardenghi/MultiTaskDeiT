@@ -14,8 +14,9 @@
 - add contributions more explicitly
 - fix and motivate references
 
-# Project Name 
-&gt; Short project tagline or one-line description. 
+# MultiTaskDeiT 
+A comparative framework evaluating single-task versus three-task joint training to measure performance gains.
+
 ## Table of Contents 
 - [Introduction](#introduction) 
 - [Paper](#paper) - [Installation](#installation) 
@@ -28,32 +29,43 @@
 - [Results](#results) 
 - [Citation](#citation) 
 - [License](#license) 
----
-## Introduction 
-A brief overview of the project, its goals, and key contributions. You can mention high-level ideas, why your approach is novel, and what tasks or datasets it addresses. 
----
 
-## Paper 
+## Introduction (TO DO)
+
+A brief overview of the project, its goals, and key contributions. You can mention high-level ideas, why your approach is novel, and what tasks or datasets it addresses. 
+
+
+## Paper (TO DO)
+
 If your project is associated with a publication, link it here: 
+
+
 **Title:** [INSERT PAPER TITLE HERE](INSERT_PAPER_URL_HERE) 
 **Authors:** First Author, Second Author, … 
 **Conference/Journal:** Venue Name, Year 
 &gt; **Abstract (optional):** 
 &gt; A concise abstract or summary of the paper. 
---- 
+
 ## Installation 
 ### Prerequisites 
-- Python 3.8+ (tested on 3.8, 3.9) 
-- CUDA 10.2 / 11.x (optional, for GPU training/inference) 
+- Python 3.12+ (tested on 3.12.9) 
+- CUDA 12.4 (optional, for GPU training/inference) 
 - `git` 
 - `conda` (Anaconda or Miniconda) 
-- Additional system library dependencies (e.g., GCC, OpenCV) 
+
 ### Conda Environment Setup 
-1. Clone the repository: ```bash git clone https://github.com/username/project-name.git cd project-name ``` 
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/alessandroardenghi/SolvingJigsawPuzzles.git
+   cd SolvingJigsawPuzzles 
+   ```
 2. Create a new conda environment: ```bash conda create -n project-env python=3.9 -y ``` 
 3. Activate the environment: ```bash conda activate project-env ``` 
 4. Install required packages: ```bash conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch # Example for PyTorch pip install -r requirements.txt ``` 
+
 &gt; **Note:** Adjust the CUDA version and package manager flags as needed. 
+
 5. Verify installation: ```bash python -c "import torch; print('CUDA available:', torch.cuda.is_available())" ```
 --- 
 ## Dataset & Pretrained Models 
