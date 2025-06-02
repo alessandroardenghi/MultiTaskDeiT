@@ -21,7 +21,7 @@ def main():
                         n_classes = cfg.classification_cfg.n_classes,
                          img_size = cfg.img_size,
                          do_jigsaw = cfg.active_heads.jigsaw, 
-                         pretrained = False,                # TO BE MODIFIED WITH TRUE!
+                         pretrained = True,                # TO BE MODIFIED WITH TRUE!
                          do_classification = cfg.active_heads.classification, 
                          do_coloring = cfg.active_heads.coloring, 
                          jigsaw_cfg = cfg.jigsaw_cfg,
@@ -53,9 +53,13 @@ def main():
     model.eval()
 
 
-    output_file = os.path.join('jigsaw_metrics', f'{cfg.output_dir}.json')
-    if not os.path.exists('jigsaw_metrics'):
-        os.makedirs('jigsaw_metrics')
+    
+    parentdir = 'model_results'
+    classdir = 'jigsaw_metrics'
+    outdir = os.path.join(parentdir, classdir)
+    output_file = os.path.join(outdir, f'{cfg.output_dir}.json')
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     
     acc_m_pos = JigsawAccuracy(n=3) # For tracking the jigsaw accuracy in predicting positions
     acc_m_rot = JigsawAccuracy(n=1) # For tracking the jigsaw accuracy in predicting rotations

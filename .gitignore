@@ -18,7 +18,7 @@ coco_colors
 _err
 _out
 pascal_data
-
+pretrained_models
 
 __pycache__/
 *.pyc
