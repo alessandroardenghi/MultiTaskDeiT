@@ -1,19 +1,26 @@
 model_name: 'MultiTaskDeiT_patch16_tiny'
-experiment_name: 'joint_175_1000_10'
-data_path: 'coco_colors'
+data_path: 'coco_data'   # Insert the path to the whole data directory. Either 'pascal_data' or 'coco_data'
 verbose: true
-img_size: 240
-batch_size: 32
+output_dir: 'classification_test_1'
+pretrained_info:
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: '' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+
 n_workers: 16
+shuffle: false
+mask: None # Set to None to disable masking, if you want to compute statistics only on a subset of the 80 classes 
+           # then set to a list of class numbers, e.g. [0, 1, 2, 3]
+
+##### TO BE LEFT FIXED #####
+
+img_size: 240       
+batch_size: 32
+
 
 active_heads:
     classification: true
-    coloring: true
-    jigsaw: true
-
-pretrained_info:
-    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
-    link: 'logs/joint_240_3by3_upsampling_multilabels_20250521_1046/checkpoints/best_model.pth' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+    coloring: false
+    jigsaw: false
 
 
 pixel_shuffle_cfg:

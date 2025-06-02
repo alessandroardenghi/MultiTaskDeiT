@@ -21,7 +21,7 @@ from utils import *
 
 def main():
     
-    cfg = load_config('config_class.yaml')        # cfg dict with all attributes inside
+    cfg = load_config('configs/eval/config_class.yaml')        # cfg dict with all attributes inside
     
     if cfg.weights != '':
         weights = torch.from_numpy(np.load(cfg.weights))
@@ -68,8 +68,13 @@ def main():
     output_file = os.path.join(outdir, f'{cfg.experiment_name}.json')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    mask = [0,2,56,60,41,39,45,26,7,13,73,24,67,74,71,62,16,58,15,57]
-    mask.sort()
+    
+    if cfg.mask is not None:
+        mask = cfg.mask
+        mask.sort()
+    else:
+        mask = None
+    
     threshold = 0.5
     accuracy = AverageMeter()
     rec_perimage = AverageMeter()
