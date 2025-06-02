@@ -89,8 +89,7 @@ Choose one of the following options (the following scripts will download, prepro
 - Download link for pretrained model weights: [INSERT PRETRAINED WEIGHTS LINK HERE]  
 
 **Train, Test Splits:** 
-- Download link for the train, val, test splits used in our evaluation: [INSERT PRETRAINED WEIGHTS LINK HERE].<br>
-After downloading, manually substitute them to the newly generated ones in the data directory.
+- The train, val and test splits used to train and evaluate the pretrained models on COCO are provieded in the __precomputed_splits__ directory. To replicate our experimental results, substitute the newly generated train.txt, test.txt, val.txt with the ones present in the __precomputed_splits__ directory.
 
 **Directory Structure (example with PascalVOC):** 
 ``` 
