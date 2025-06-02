@@ -115,13 +115,13 @@ MultiTaskDeit/
 ``` 
 --- 
 ## Usage ### 
-### Training Single-Head Models
-1. Configure training settings in `configs/train/config.yaml`
+### Training Models from Frozen Backbone
+1. Configure training settings in `configs/train/config.yaml`. (It is possible to train models with 1, 2 or 3 heads)
 2. Run training script: ```python3 train.py```
 3. Logs and checkpoints will be saved in `logs/{experiment_name}`.
 --- 
-### Training MultiTaskDeiT (3-head model)
-1. Configure training settings in `configs/train/config_multi.yaml`
+### Finetuning MultiTaskDeiT (3-head model)
+1. Configure training settings in `configs/train/config_multi.yaml` (Paths to the three pretrained heads should be included here)
 2. Run training script: ```python3 train_multi.py```
 3. Logs and checkpoints will be saved in `logs/{experiment_name}`.
 --- 
