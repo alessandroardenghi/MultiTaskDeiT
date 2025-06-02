@@ -8,7 +8,6 @@ temp.ipynb
 val2014
 logs
 class_top_metrics
-*.yaml
 annotations
 _coloring_models*
 _jigsaw_models*

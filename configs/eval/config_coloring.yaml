@@ -1,0 +1,62 @@
+model_name: 'MultiTaskDeiT_patch16_tiny'
+data_path: 'pascal_data'   # Insert the path to the whole data directory. Either 'pascal_data' or 'coco_data'
+verbose: true
+output_dir: 'coloring_test_1'
+pretrained_info:
+    checkpoint_type: 'torch_checkpoint'         # can either be 'torch_checkpoint' or 'timm_name'
+    link: '' # when checkpoint_type is 'timm_name' use 'deit_tiny_patch16_224'
+
+n_workers: 16
+n_images: 100
+shuffle: false
+
+
+
+##### TO BE LEFT FIXED #####
+
+img_size: 240       
+batch_size: 32
+
+
+active_heads:
+    classification: true
+    coloring: false
+    jigsaw: false
+
+
+pixel_shuffle_cfg:
+    do: false
+    steps: 1
+    smoothing: false
+
+jigsaw_cfg:
+    use_cls_embeds: true
+    n_jigsaw_patches: 3
+
+classification_cfg:
+    n_classes: 80
+
+freeze_modules:
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
+
+unfreeze_modules:
+    cls_token: false
+    pos_embed: false
+    patch_embed: false
+    blocks: false
+    norm: false
+    jigsaw_head: false
+    coloring_decoder: false
+    class_head: false
+
+
+
+

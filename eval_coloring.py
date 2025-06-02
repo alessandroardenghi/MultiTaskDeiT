@@ -52,7 +52,7 @@ def recolor_images(data_path, output_dir, split, model, n_images, img_size, shuf
 
 def main():
     
-    cfg = load_config('configs/config_coloring_eval.yaml')        # cfg dict with all attributes inside
+    cfg = load_config('configs/eval/config_coloring.yaml')        # cfg dict with all attributes inside
     
     model = create_model(cfg.model_name, 
                          img_size = cfg.img_size,

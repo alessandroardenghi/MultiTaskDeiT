@@ -7,32 +7,21 @@ import torch
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from dataset_functions.multitask_dataloader import MultiTaskDataset
+from multitask_dataloader import MultiTaskDataset
 
-import torch.optim as optim
 from timm import create_model
 import models.model_registry
-from models.full_model import MultiTaskDeiT
-
-from loss import WeightedL1Loss, WeightedMSELoss
-from multitask_training import train_model
-from logger import TrainingLogger
 from utils import *
 
 def main():
     
-    cfg = load_config('config_class.yaml')        # cfg dict with all attributes inside
-    
-    if cfg.weights != '':
-        weights = torch.from_numpy(np.load(cfg.weights))
-    else:
-        weights = None
+    cfg = load_config('configs/eval/config_jigsaw.yaml')        # cfg dict with all attributes inside
     
     model = create_model(cfg.model_name, 
                         n_classes = cfg.classification_cfg.n_classes,
                          img_size = cfg.img_size,
                          do_jigsaw = cfg.active_heads.jigsaw, 
-                         pretrained = True,
+                         pretrained = False,                # TO BE MODIFIED WITH TRUE!
                          do_classification = cfg.active_heads.classification, 
                          do_coloring = cfg.active_heads.coloring, 
                          jigsaw_cfg = cfg.jigsaw_cfg,
@@ -52,7 +41,6 @@ def main():
                                 do_jigsaw=cfg.active_heads.jigsaw,
                                 do_coloring=cfg.active_heads.coloring,
                                 do_classification=cfg.active_heads.classification,
-                                weights=weights, 
                                 transform=True)
 
     test_dataloader = DataLoader(test_dataset, 
@@ -65,7 +53,7 @@ def main():
     model.eval()
 
 
-    output_file = os.path.join('jigsaw_metrics', f'{cfg.experiment_name}.json')
+    output_file = os.path.join('jigsaw_metrics', f'{cfg.output_dir}.json')
     if not os.path.exists('jigsaw_metrics'):
         os.makedirs('jigsaw_metrics')
     
