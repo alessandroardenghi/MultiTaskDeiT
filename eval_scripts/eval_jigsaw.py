@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from multitask_dataloader import MultiTaskDataset
+from engine.multitask_dataloader import MultiTaskDataset
 
 from timm import create_model
 import models.model_registry
-from utils import *
+from functions.utils import *
 
 def main():
     

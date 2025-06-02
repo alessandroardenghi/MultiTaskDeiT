@@ -4,7 +4,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 import torch
 import torchvision.transforms as transforms
-from utils import jigsaw_single_image
+from functions.utils import jigsaw_single_image
 from munch import Munch
 import cv2
 import numpy as np

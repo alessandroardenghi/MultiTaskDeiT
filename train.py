@@ -14,10 +14,10 @@ from timm import create_model
 import models.model_registry
 from models.full_model import MultiTaskDeiT
 
-from loss import WeightedL1Loss, WeightedMSELoss
-from multitask_training import train_model
-from logger import TrainingLogger
-from utils import *
+from functions.loss import WeightedL1Loss, WeightedMSELoss
+from engine.multitask_training import train_model
+from functions.logger import TrainingLogger
+from functions.utils import *
 
 
 def main():

@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader
 from collections.abc import Iterable, Callable
 from typing import List
 
-from utils import AverageMeter, JigsawAccuracy, load_config, move_to_device
-from logger import TrainingLogger
+from functions.utils import AverageMeter, JigsawAccuracy, load_config, move_to_device
+from functions.logger import TrainingLogger
 
 def train_one_epoch(
     model: nn.Module,

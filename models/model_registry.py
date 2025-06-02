@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from functools import partial
-from utils import load_pretrained_weights
+from functions.utils import load_pretrained_weights
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.models import load_pretrained
 from timm.layers import DropPath, to_2tuple, trunc_normal_

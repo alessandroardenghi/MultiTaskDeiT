@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import models.model_registry
 import os
 import numpy as np
-from multitask_dataloader import MultiTaskDataset
+from engine.multitask_dataloader import MultiTaskDataset
 from munch import Munch
 from timm import create_model
 from PIL import Image
