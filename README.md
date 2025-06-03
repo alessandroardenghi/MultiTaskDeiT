@@ -148,10 +148,19 @@ MultiTaskDeit/
 3. Colorized images will be saved to `model_results/coloring_results/{experiment_name}` 
 --- 
 ## Results 
-| Model | Dataset | Top-1 Accuracy | Top-5 Accuracy | mAP | Comments | 
-|---------------------|--------------|----------------|----------------|----------|------------------------| 
-| Baseline | Dataset A | 75.20% | 92.15% | 0.672 | ResNet-50 backbone | 
-| **Our Proposed 🏆** | Dataset A | **78.45%** | **94.03%** | **0.703**| + Data augmentation | 
-| Our Method (Variant)| Dataset A | 77.18% | 93.10% | 0.689 | Different hyperparams | 
-| ... | ... | ... | ... | ... | ... | 
---- 
+#### Classification Task
+
+| Model     | Accuracy | Avg-F1 | Best-F1 |
+|-----------|----------|--------|---------|
+| Frozen    | 19.24    | 45.91  | 89.10   |
+| Finetune  | 24.99    | 55.77  | 90.28   |
+| Multi     | 23.91    | 54.84  | 90.35   |
+
+#### Jigsaw Task
+
+| Model     | Top1-Pos | Top3-Pos | Top1-Rot |
+|-----------|----------|----------|----------|
+| Random    | 11.11    | 33.33    | 25.00    |
+| Frozen    | 21.63    | 55.03    | 37.06    |
+| Finetune  | 33.11    | 76.13    | 55.64    |
+| Multi     | 32.71    | 75.01    | 54.58    |
