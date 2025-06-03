@@ -130,21 +130,21 @@ MultiTaskDeit/
 3. Logs and checkpoints will be saved in `logs/{experiment_name}`.
 --- 
 ### Inference Classification
-1. Configure classification inference settings in `configs/eval/configs/eval/config_class.yaml`
+1. Configure classification inference settings in `configs/eval/config_class.yaml`
 
-2. Run inference script: ```python3 eval_class.py``` 
+2. Run inference script: ```python3 -m eval_script/eval_class``` 
 3. Output predictions will be saved to `model_results/class_top_metrics/{experiment_name}` 
 --- 
 ### Inference Jigsaw Reconstruction
-1. Configure jigsaw inference settings in `configs/eval/configs/eval/config_jigsaw.yaml`
+1. Configure jigsaw inference settings in `configs/eval/config_jigsaw.yaml`
 
-2. Run inference script: ```python3 eval_jigsaw.py``` 
+2. Run inference script: ```python3 -m eval_script/eval_jigsaw``` 
 3. Output predictions will be saved to `model_results/jigsaw_metrics/{experiment_name}` 
 --- 
 ### Inference Colorization
-1. Configure colorization inference settings in `configs/eval/configs/eval/config_coloring.yaml`
+1. Configure colorization inference settings in `configs/eval/config_coloring.yaml`
 
-2. Run inference script: ```python3 eval_coloring.py``` 
+2. Run inference script: ```python3 -m eval_script/eval_coloring``` 
 3. Colorized images will be saved to `model_results/coloring_results/{experiment_name}` 
 --- 
 ## Results 
