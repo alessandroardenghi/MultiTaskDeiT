@@ -1,15 +1,3 @@
-# Remaining Tasks:
-## REPORT TASKS
-- Grafici: model architecture, results, colorization results (best and worst)?
-- Describe coloring loss
-- classification metrics (aggiungere)
-- Results da aggiungere. Aggiungere tables di results e coi parametri
-- select images to import in the model
-- improve conclusions
-- make report shorter
-- add contributions more explicitly
-- fix and motivate references
-
 # MultiTaskDeiT 
 A comparative framework evaluating single-task versus three-task joint training to measure performance gains.
 
